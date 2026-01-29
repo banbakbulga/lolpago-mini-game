@@ -1,5 +1,6 @@
 // 백엔드 서버 URL (개발 환경: localhost:8000, 프로덕션: 환경 변수 사용)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// 백엔드 서버 URL (개발 환경: localhost:8000, 프로덕션: 환경 변수 사용 또는 고정 IP)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://118.223.39.153:8000';
 const REGION = 'kr';
 const REGION_ASIA = 'asia';
 
