@@ -538,7 +538,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
 
                         {/* Items */}
                         {playerDetails.items && (
-                          <div className="flex gap-0.5 md:gap-1 flex-nowrap">
+                          <div className="flex gap-0.5 md:gap-1 flex-wrap">
                             {playerDetails.items.map((itemId, idx) => (
                               <div
                                 key={idx}
@@ -690,7 +690,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
 
                         {/* Items */}
                         {playerDetails.items && (
-                          <div className="flex gap-0.5 md:gap-1 flex-nowrap justify-end">
+                          <div className="flex gap-0.5 md:gap-1 flex-wrap justify-end">
                             {playerDetails.items.map((itemId, idx) => (
                               <div
                                 key={idx}
