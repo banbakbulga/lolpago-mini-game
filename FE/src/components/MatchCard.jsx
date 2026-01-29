@@ -93,7 +93,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
         });
       }
 
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://118.223.39.153:8000';
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '' : 'http://localhost:8000');
       const response = await fetch(`${API_BASE_URL}/api/analyze-match`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

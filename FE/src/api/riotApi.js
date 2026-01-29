@@ -38,7 +38,11 @@ export async function getLeagueEntries(tier, division = null, page = 1) {
   const url = `${API_BASE_URL}/api/league-entries/${tier}${divisionParam}?page=${page}`;
 
   const response = await fetch(url);
-  if (!response.ok) throw new Error(`${tier} ${division || ''} 호출 실패: ${response.status}`);
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(`API Error (${response.status}) at ${url}:`, text.slice(0, 500)); // 첫 500자만 로그
+    throw new Error(`${tier} ${division || ''} 호출 실패: ${response.status} - ${text.slice(0, 100)}`);
+  }
   const data = await response.json();
   return data || [];
 }
