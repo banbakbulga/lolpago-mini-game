@@ -16,7 +16,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const RIOT_API_KEY = process.env.RIOT_API_KEY; 
+const RIOT_API_KEY = process.env.RIOT_API_KEY;
 const REGION = 'kr';
 const REGION_ASIA = 'asia';
 
@@ -115,7 +115,7 @@ app.get('/api/champions', async (req, res) => {
     const versionRes = await axios.get('https://ddragon.leagueoflegends.com/api/versions.json');
     const latestVersion = versionRes.data[0];
     const champRes = await axios.get(`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/ko_KR/champion.json`);
-    
+
     const allChamps = champRes.data.data;
     const miniChamps = Object.values(allChamps).map(champ => ({
       id: champ.id,
@@ -176,15 +176,17 @@ app.post('/api/analyze-match', async (req, res) => {
     
     [서술 가이드]
     1. 반드시 첫 문장에서 경기의 전체 흐름을 규정할 것  
-    → ${
-      isUpset
+    → ${isUpset
         ? `${predictedWinner}의 무난한 승리가 예상됐지만, ${actualWinnerName}이 이를 뒤엎는 반전을 만들어냈습니다.`
         : `${predictedWinner}이 초반부터 흐름을 장악하며 예측을 증명한 경기였습니다.`
-    }
+      }
     
     2. 전문 용어 적극 사용 (스노우볼, 이니시에이팅, 짤라먹기, 오브젝트 설계, 드래곤 스택, 시야 장악 등)
     
     3. 바론·드래곤은 **경기 전환점**, 챔피언 활약은 **결정타**처럼 묘사
+
+    4. 승리 확률이 더 높다하더라도 1프로 정도만 차이나면 ~~팀의 무난한 승리가 예상됐습니다 이런 식으로 말하지 말고 승률에 기반에서 알맞은 코멘트를 해
+
     
     [형식 제한 — 매우 중요]
     - 전체 분량은 **최대 5줄**
@@ -210,10 +212,10 @@ app.post('/api/analyze-match', async (req, res) => {
     const result = await aiModel.generateContent(prompt);
     const response = await result.response;
     let text = response.text();
-    
+
     // 마크다운 형식(**텍스트**)이 있으면 HTML로 변환
     text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    
+
     console.log("✅ 고도화된 AI 분석 성공");
     res.json({ analysis: text });
   } catch (error) {

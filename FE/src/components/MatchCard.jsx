@@ -81,7 +81,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
             frame.matchEvents.forEach(event => {
               // 중요한 이벤트만 필터링
               if (
-                event.type === 'penta' || 
+                event.type === 'penta' ||
                 event.type === 'kill' || // 트리플, 쿼드라킬
                 (event.type === 'obj' && (event.text.includes('바론') || event.text.includes('장로') || event.text.includes('억제기'))) ||
                 event.type === 'ace'
@@ -149,7 +149,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
 
     var randomInRange = (min, max) => Math.random() * (max - min) + min;
 
-    var interval = setInterval(function() {
+    var interval = setInterval(function () {
       var timeLeft = animationEnd - Date.now();
 
       if (timeLeft <= 0) {
@@ -157,16 +157,16 @@ function MatchCard({ match, index, onAnswer, onNext }) {
       }
 
       var particleCount = 50 * (timeLeft / duration);
-      
+
       // 화면 양쪽에서 폭죽이 팡팡 터지는 효과
       confetti({
-        ...defaults, 
+        ...defaults,
         particleCount,
         origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
         colors: ['#4ade80', '#ffffff'] // 초록색 + 흰색 (승리 테마)
       });
       confetti({
-        ...defaults, 
+        ...defaults,
         particleCount,
         origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
         colors: ['#3b82f6', '#ffffff'] // 파란색 + 흰색
@@ -177,17 +177,17 @@ function MatchCard({ match, index, onAnswer, onNext }) {
   // 승리팀 선택 핸들러
   const handleTeamSelect = (teamId) => {
     if (isAnswered) return; // 이미 답변한 경우 무시
-    
+
     setSelectedTeam(teamId);
     const correct = teamId === match.승리팀ID;
     setIsCorrect(correct);
     setIsAnswered(true);
-    
+
     // 정답일 경우 폭죽 발사!
     if (correct) {
       triggerConfetti();
     }
-    
+
     // 부모 컴포넌트에 정답 여부 전달
     if (onAnswer) {
       onAnswer(correct);
@@ -207,13 +207,13 @@ function MatchCard({ match, index, onAnswer, onNext }) {
     const normalizedName = championName === 'Fiddlesticks' || championName === 'fiddlesticks' ? 'Fiddlesticks' : championName;
     const img = e.target;
     let attemptCount = img.dataset.attemptCount ? parseInt(img.dataset.attemptCount) : 0;
-    
+
     // 대체 이미지 URL 목록
     const fallbackUrls = [
       `https://ddragon.leagueoflegends.com/cdn/16.1.1/img/champion/${normalizedName}.png`,
       `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${normalizedName}_0.jpg`,
     ];
-    
+
     if (attemptCount < fallbackUrls.length) {
       img.dataset.attemptCount = (attemptCount + 1).toString();
       img.src = fallbackUrls[attemptCount];
@@ -223,31 +223,31 @@ function MatchCard({ match, index, onAnswer, onNext }) {
       img.onerror = null; // 무한 루프 방지
     }
   };
-  
+
   // 챔피언 데이터 찾기 (키, id, 정규화된 이름으로 매칭)
   const getChampionData = (name) => {
     if (!name || !champData) return null;
-    
+
     // 정확한 키로 먼저 시도
     if (champData[name]) {
       return champData[name];
     }
-    
+
     // 챔피언 이름 정규화 (대소문자 처리)
     const normalizedName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
-    
+
     // 정규화된 이름으로 시도
     if (champData[normalizedName]) {
       return champData[normalizedName];
     }
-    
+
     // 모든 키를 순회하며 id로 매칭 시도
     for (const [key, value] of Object.entries(champData)) {
       if (value.id === name || value.id === normalizedName) {
         return value;
       }
     }
-    
+
     return null;
   };
 
@@ -302,13 +302,12 @@ function MatchCard({ match, index, onAnswer, onNext }) {
   };
 
   return (
-    <div className={`relative bg-white text-slate-900 dark:bg-[#121216] dark:text-slate-200 border border-slate-200 dark:border-white/10 rounded-3xl p-4 md:p-6 overflow-visible transition-all duration-500 shadow-md ${
-      isAnswered 
-        ? isCorrect 
-          ? 'shadow-[0_0_15px_rgba(34,197,94,0.15),0_0_30px_rgba(34,197,94,0.08)] border-green-500/30' 
-          : 'shadow-[0_0_15px_rgba(239,68,68,0.15),0_0_30px_rgba(239,68,68,0.08)] border-red-500/30'
-        : 'shadow-[0_10px_30px_rgba(0,0,0,0.3)]'
-    }`}>
+    <div className={`relative bg-white text-slate-900 dark:bg-[#121216] dark:text-slate-200 border border-slate-200 dark:border-white/10 rounded-3xl p-4 md:p-6 overflow-visible transition-all duration-500 shadow-md ${isAnswered
+      ? isCorrect
+        ? 'shadow-[0_0_15px_rgba(34,197,94,0.15),0_0_30px_rgba(34,197,94,0.08)] border-green-500/30'
+        : 'shadow-[0_0_15px_rgba(239,68,68,0.15),0_0_30px_rgba(239,68,68,0.08)] border-red-500/30'
+      : 'shadow-[0_10px_30px_rgba(0,0,0,0.3)]'
+      }`}>
 
       {/* 상단 타임라인/티어 정보 */}
       <div className="flex justify-between items-center mb-1">
@@ -320,119 +319,125 @@ function MatchCard({ match, index, onAnswer, onNext }) {
           <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest">{match.tier || 'MASTER'}</span>
         </div>
       </div>
-      
-{/* 힌트 섹션: 컴팩트 스타일 + 오브젝트 정보 포함 */}
-{hintPlayer && !isAnswered && (
-  <div className="flex flex-col gap-3 p-2 relative z-0">
-        <div className="mb-1 relative overflow-visible rounded-xl bg-white dark:bg-[#16171b] border-l-4 border-yellow-500 shadow-md animate-in fade-in slide-in-from-left-2 duration-500 z-0">
-          <div className="grid grid-cols-[auto_1fr] gap-4 items-center p-3">
-            
-            {/* 1. HINT 라벨 (좌측 고정) */}
-            <div className="flex flex-col items-center justify-center px-2 border-r border-slate-200 dark:border-white/5 gap-0.5 min-w-[50px]">
-              <span className="text-xl drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">💡</span>
-              <span className="text-[9px] font-black text-yellow-600 dark:text-yellow-500 tracking-widest uppercase leading-none">HINT</span>
-            </div>
 
-            {/* 2. 정보 영역 - 챔피언 섹션과 동일한 너비 */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
-              
-              {/* 챔피언 & 오브젝트 정보 */}
-              <div className="flex items-center gap-3">
-                {/* 챔피언 프사 */}
-                <div className="relative flex-shrink-0">
-                  <img 
-                    src={getIconUrl(hintPlayer.championName)} 
-                    className={`w-10 h-10 rounded-lg border border-black/10 dark:border-white/10 ${hintPlayer.team === 'blue' ? 'shadow-[0_0_10px_rgba(59,130,246,0.3)]' : 'shadow-[0_0_10px_rgba(239,68,68,0.3)]'}`}
-                    alt="Hint Champion"
-                    onError={(e) => handleChampionImageError(e, hintPlayer.championName)}
-                  />
-                  <div className={`absolute -bottom-1 -right-1 w-4 h-4 flex items-center justify-center rounded text-[9px] font-black text-white ${hintPlayer.team === 'blue' ? 'bg-blue-600' : 'bg-red-600'}`}>
-                    {hintPlayer.team === 'blue' ? 'B' : 'R'}
-                  </div>
-                </div>
+      {/* 힌트 섹션: 컴팩트 스타일 + 오브젝트 정보 포함 */}
+      {hintPlayer && !isAnswered && (
+        <div className="flex flex-col gap-3 p-2 relative z-0">
+          <div className="mb-1 relative overflow-visible rounded-xl bg-white dark:bg-[#16171b] border-l-4 border-yellow-500 shadow-md animate-in fade-in slide-in-from-left-2 duration-500 z-0">
+            <div className="grid grid-cols-[auto_1fr] gap-4 items-center p-3">
 
-                {/* 텍스트 정보 */}
-                <div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-bold text-slate-900 dark:text-slate-200">{getKoName(hintPlayer.championName)}</span>
-                    <span className="text-[10px] text-slate-600 dark:text-slate-500 font-medium">CS {hintPlayer.totalMinionsKilled + hintPlayer.neutralMinionsKilled}</span>
-                  </div>
-
-                  {/* KDA 정보 */}
-                  {hintPlayer.kills !== undefined && hintPlayer.deaths !== undefined && hintPlayer.assists !== undefined && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-slate-600 dark:text-slate-400 font-black">
-                        KDA: <span className="text-slate-900 dark:text-slate-200">{hintPlayer.kills}/{hintPlayer.deaths}/{hintPlayer.assists}</span>
-                      </span>
-                    </div>
-                  )}
-                </div>
+              {/* 1. HINT 라벨 (좌측 고정) */}
+              <div className="flex flex-col items-center justify-center px-2 border-r border-slate-200 dark:border-white/5 gap-0.5 min-w-[50px]">
+                <span className="text-xl drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">💡</span>
+                <span className="text-[9px] font-black text-yellow-600 dark:text-yellow-500 tracking-widest uppercase leading-none">HINT</span>
               </div>
 
-              {/* 3. 아이템 슬롯 (우측 정렬) */}
-              {hintPlayer.items && (
-                <div className="flex gap-1 md:justify-end relative z-0">
-                  {hintPlayer.items.map((itemId, idx) => {
-                    if (itemId === 0) return null;
-                    const itemInfo = itemData?.[String(itemId)];
-                    return (
-                      <div key={idx} className="relative group z-0">
-                        <img 
-                          src={getItemUrl(itemId)} 
-                          className="w-8 h-8 rounded border border-slate-200 dark:border-white/10 hover:border-yellow-500 transition-colors cursor-help bg-slate-200 dark:bg-black/40" 
-                          alt="item" 
-                        />
-                        {/* 아이템 툴팁 */}
-                        {itemInfo && (
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 max-w-[280px] p-3 bg-white dark:bg-[#0f1015]/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-lg text-left opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-[50] shadow-2xl">
-                            {/* 아이템 이름 */}
-                            <p className="text-xs font-black text-yellow-600 dark:text-yellow-400 mb-1">{itemInfo.name}</p>
-                            
-                            {/* 가격 정보 */}
-                            <p className="text-[10px] text-slate-600 dark:text-slate-500 font-bold mb-2">
-                              가격: <span className="text-yellow-700 dark:text-yellow-200">{itemInfo.gold?.total || 0}</span>
-                              {itemInfo.gold?.base > 0 && ` (조합비: ${itemInfo.gold.base})`}
-                            </p>
+              {/* 2. 정보 영역 - 챔피언 섹션과 동일한 너비 */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
 
-                            {/* 아이템 설명 (HTML 태그 제거 및 스타일링) */}
-                            {itemInfo.description && (
-                              <div 
-                                className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed space-y-1 item-desc"
-                                dangerouslySetInnerHTML={{ 
-                                  __html: (itemInfo.description || '')
-                                    .replace(/<br>/g, '<br/>') // 줄바꿈 보존
-                                    .replace(/<attention>/g, '<span class="text-slate-900 dark:text-white font-bold">') // 중요 정보 강조
-                                    .replace(/<\/attention>/g, '</span>')
-                                    .replace(/<stats>/g, '<span class="text-blue-800 dark:text-blue-300 block mb-1">') // 스탯 정보 파란색
-                                    .replace(/<\/stats>/g, '</span>')
-                                    .replace(/<passive>/g, '<span class="text-yellow-700 dark:text-yellow-200 font-bold">') // 패시브 효과 노란색
-                                    .replace(/<\/passive>/g, '</span>')
-                                    .replace(/<active>/g, '<span class="text-orange-700 dark:text-orange-300 font-bold">') // 액티브 효과 주황색
-                                    .replace(/<\/active>/g, '</span>')
-                                    .replace(/<mainText>/g, '<span class="text-slate-900 dark:text-slate-200">') // 메인 텍스트
-                                    .replace(/<\/mainText>/g, '</span>')
-                                    // 나머지 불필요한 태그 제거 (span, br은 보존)
-                                    .replace(/<(?!\/?(span|br)\b)[^>]+>/gi, '')
-                                }} 
-                              />
-                            )}
-                          </div>
-                        )}
+                {/* 챔피언 & 오브젝트 정보 */}
+                <div className="flex items-center gap-3">
+                  {/* 챔피언 프사 */}
+                  <div className="relative flex-shrink-0">
+                    <img
+                      src={getIconUrl(hintPlayer.championName)}
+                      className={`w-10 h-10 rounded-lg border border-black/10 dark:border-white/10 ${hintPlayer.team === 'blue' ? 'shadow-[0_0_10px_rgba(59,130,246,0.3)]' : 'shadow-[0_0_10px_rgba(239,68,68,0.3)]'}`}
+                      alt="Hint Champion"
+                      onError={(e) => handleChampionImageError(e, hintPlayer.championName)}
+                    />
+                    <div className={`absolute -bottom-1 -right-1 w-4 h-4 flex items-center justify-center rounded text-[9px] font-black text-white ${hintPlayer.team === 'blue' ? 'bg-blue-600' : 'bg-red-600'}`}>
+                      {hintPlayer.team === 'blue' ? 'B' : 'R'}
+                    </div>
+                  </div>
+
+                  {/* 텍스트 정보 */}
+                  <div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm font-bold text-slate-900 dark:text-slate-200">{getKoName(hintPlayer.championName)}</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-500 font-medium">CS {hintPlayer.totalMinionsKilled + hintPlayer.neutralMinionsKilled}</span>
+                    </div>
+
+                    {/* KDA 정보 */}
+                    {hintPlayer.kills !== undefined && hintPlayer.deaths !== undefined && hintPlayer.assists !== undefined && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] text-slate-600 dark:text-slate-400 font-black">
+                          KDA: <span className="text-slate-900 dark:text-slate-200">{hintPlayer.kills}/{hintPlayer.deaths}/{hintPlayer.assists}</span>
+                        </span>
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
                 </div>
-              )}
+
+                {/* 3. 아이템 슬롯 (우측 정렬) */}
+                {hintPlayer.items && (
+                  <div className="flex gap-1 md:justify-end relative z-0">
+                    {hintPlayer.items.map((itemId, idx) => {
+                      if (itemId === 0) return null;
+                      const itemInfo = itemData?.[String(itemId)];
+                      return (
+                        <div key={idx} className="relative group z-0">
+                          <img
+                            src={getItemUrl(itemId)}
+                            className="w-8 h-8 rounded border border-slate-200 dark:border-white/10 hover:border-yellow-500 transition-colors cursor-help bg-slate-200 dark:bg-black/40"
+                            alt="item"
+                          />
+                          {/* 아이템 툴팁 */}
+                          {itemInfo && (
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 max-w-[280px] p-3 bg-white dark:bg-[#0f1015]/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-lg text-left opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-[50] shadow-2xl">
+                              {/* 아이템 이름 */}
+                              <p className="text-xs font-black text-yellow-600 dark:text-yellow-400 mb-1">{itemInfo.name}</p>
+
+                              {/* 가격 정보 */}
+                              <p className="text-[10px] text-slate-600 dark:text-slate-500 font-bold mb-2">
+                                가격: <span className="text-yellow-700 dark:text-yellow-200">{itemInfo.gold?.total || 0}</span>
+                                {itemInfo.gold?.base > 0 && ` (조합비: ${itemInfo.gold.base})`}
+                              </p>
+
+                              {/* 아이템 설명 (HTML 태그 제거 및 스타일링) */}
+                              {itemInfo.description && (
+                                <div
+                                  className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed space-y-1 item-desc"
+                                  dangerouslySetInnerHTML={{
+                                    __html: (itemInfo.description || '')
+                                      .replace(/<br>/g, '<br/>') // 줄바꿈 보존
+                                      .replace(/<attention>/g, '<span class="text-slate-900 dark:text-white font-bold">') // 중요 정보 강조
+                                      .replace(/<\/attention>/g, '</span>')
+                                      .replace(/<stats>/g, '<span class="text-blue-800 dark:text-blue-300 block mb-1">') // 스탯 정보 파란색
+                                      .replace(/<\/stats>/g, '</span>')
+                                      .replace(/<passive>/g, '<span class="text-yellow-700 dark:text-yellow-200 font-bold">') // 패시브 효과 노란색
+                                      .replace(/<\/passive>/g, '</span>')
+                                      .replace(/<active>/g, '<span class="text-orange-700 dark:text-orange-300 font-bold">') // 액티브 효과 주황색
+                                      .replace(/<\/active>/g, '</span>')
+                                      .replace(/<mainText>/g, '<span class="text-slate-900 dark:text-slate-200">') // 메인 텍스트
+                                      .replace(/<\/mainText>/g, '</span>')
+                                      .replace(/<highlight>/g, '<span class="font-bold">') // 강조 (색상 제거)
+                                      .replace(/<\/highlight>/g, '</span>')
+                                      .replace(/<blue>/g, '<span class="font-bold">') // 블루팀 (색상 제거)
+                                      .replace(/<\/blue>/g, '</span>')
+                                      .replace(/<red>/g, '<span class="font-bold">') // 레드팀 (색상 제거)
+                                      .replace(/<\/red>/g, '</span>')
+                                      // 나머지 불필요한 태그 제거 (span, br은 보존)
+                                      .replace(/<(?!\/?(span|br)\b)[^>]+>/gi, '')
+                                  }}
+                                />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-        </div>
       )}
       {/* 대결 섹션 */}
-      <div className="grid grid-cols-[1fr_auto_1fr] gap-3 md:gap-4 items-center mb-4 relative z-10">
-        
+      <div className="grid grid-cols-[1fr_auto_1fr] gap-2 md:gap-4 items-center mb-4 relative z-10">
+
         {/* 블루팀 리스트 */}
-        <div 
+        <div
           onClick={() => !isAnswered && handleTeamSelect(100)}
           className={`flex-1 transition-all duration-300 rounded-xl p-2 cursor-pointer relative z-10
             ${!isAnswered ? 'hover:bg-blue-900/20' : ''}
@@ -456,10 +461,10 @@ function MatchCard({ match, index, onAnswer, onNext }) {
               {match.blueBans.map((id, i) => {
                 const name = getChampNameById(id);
                 return name ? (
-                  <img 
-                    key={i} 
-                    src={getIconUrl(name)} 
-                    className="w-6 h-6 rounded grayscale border border-red-900/50 opacity-60" 
+                  <img
+                    key={i}
+                    src={getIconUrl(name)}
+                    className="w-6 h-6 rounded grayscale border border-red-900/50 opacity-60"
                     alt="ban"
                     onError={(e) => handleChampionImageError(e, name)}
                   />
@@ -479,7 +484,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
               />
             </div>
           )}
-          
+
           {/* 블루 픽 (세로 일렬) */}
           <div className="space-y-1.5">
             {match.blueTeam?.map((name, i) => {
@@ -488,9 +493,9 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                 <div key={i} className="relative group flex items-center gap-1.5 bg-blue-50 dark:bg-blue-500/5 p-1 md:p-1.5 rounded-lg border-l-4 border-blue-200 dark:border-blue-500/50 hover:bg-blue-100 dark:hover:bg-blue-500/10 transition-colors backdrop-blur-sm z-[100] min-h-[56px]">
                   {/* 챔피언 아이콘 */}
                   <div className="relative z-[100]">
-                    <img 
-                      src={getIconUrl(name)} 
-                      className="w-10 h-10 md:w-12 md:h-12 rounded-lg shadow border border-blue-500/30 flex-shrink-0 group-hover:scale-110 transition-transform duration-200" 
+                    <img
+                      src={getIconUrl(name)}
+                      className="w-10 h-10 md:w-14 md:h-14 rounded-lg shadow border border-blue-500/30 flex-shrink-0 group-hover:scale-110 transition-transform duration-200"
                       alt={name}
                       onError={(e) => handleChampionImageError(e, name)}
                     />
@@ -518,40 +523,53 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                     </div>
                   </div>
                   <div className="text-left flex-1 min-w-0">
-                    <p className="text-[9px] md:text-[10px] text-blue-800 dark:text-blue-400 font-bold mb-0.5 uppercase tracking-wider">{positions[i] || ''}</p>
-                    <p className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-200 truncate">{getKoName(name)}</p>
-                    {isAnswered && playerDetails && playerDetails.items && (
-                      <div className="flex gap-0.5 mt-1 flex-wrap">
-                        {playerDetails.items.map((itemId, idx) => (
-                          <div
-                            key={idx}
-                            className={`w-4 h-4 rounded border ${
-                              itemId === 0 || !itemId
-                                ? 'bg-slate-200 dark:bg-gray-800 border-slate-300 dark:border-gray-700'
-                                : 'border-slate-400 dark:border-gray-600'
-                            } flex items-center justify-center`}
-                          >
-                            {itemId !== 0 && itemId ? (
-                              <img
-                                src={getItemUrl(itemId)}
-                                className="w-full h-full rounded"
-                                alt={`item ${itemId}`}
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                  e.target.parentElement.classList.add('bg-slate-200', 'dark:bg-gray-800');
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-slate-200 dark:bg-gray-800 rounded"></div>
-                            )}
+                    <div className="flex items-baseline gap-1.5">
+                      <p className="text-[9px] md:text-[10px] text-blue-800 dark:text-blue-400 font-bold uppercase tracking-wider">{positions[i] || ''}</p>
+                      <p className="text-[11px] md:text-base font-bold text-slate-900 dark:text-slate-200 truncate leading-tight">{getKoName(name)}</p>
+                    </div>
+
+                    {/* Mobile: KDA + Items Row */}
+                    {isAnswered && playerDetails && (
+                      <div className="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2 mt-0.5">
+                        {/* Mobile KDA */}
+                        <span className="md:hidden text-[10px] text-blue-800 dark:text-blue-300 font-black whitespace-nowrap">
+                          {playerDetails.kills}/{playerDetails.deaths}/{playerDetails.assists}
+                        </span>
+
+                        {/* Items */}
+                        {playerDetails.items && (
+                          <div className="flex gap-0.5 md:gap-1 flex-nowrap">
+                            {playerDetails.items.map((itemId, idx) => (
+                              <div
+                                key={idx}
+                                className={`w-3 h-3 md:w-6 md:h-6 rounded border ${itemId === 0 || !itemId
+                                  ? 'bg-slate-200 dark:bg-gray-800 border-slate-300 dark:border-gray-700'
+                                  : 'border-slate-400 dark:border-gray-600'
+                                  } flex items-center justify-center`}
+                              >
+                                {itemId !== 0 && itemId ? (
+                                  <img
+                                    src={getItemUrl(itemId)}
+                                    className="w-full h-full rounded"
+                                    alt={`item ${itemId}`}
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.parentElement.classList.add('bg-slate-200', 'dark:bg-gray-800');
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-slate-200 dark:bg-gray-800 rounded"></div>
+                                )}
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
                     )}
                   </div>
                   {isAnswered && playerDetails && (
-                    <div className="text-right flex-shrink-0 mr-1 md:mr-2">
-                      <p className="text-[10px] md:text-xs text-blue-800 dark:text-blue-300 font-black whitespace-nowrap">
+                    <div className="hidden md:block text-right flex-shrink-0 mr-1 md:mr-2">
+                      <p className="text-[10px] md:text-sm text-blue-800 dark:text-blue-300 font-black whitespace-nowrap">
                         {playerDetails.kills}/{playerDetails.deaths}/{playerDetails.assists}
                       </p>
                     </div>
@@ -570,7 +588,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
         </div>
 
         {/* 레드팀 구역 */}
-        <div 
+        <div
           onClick={() => !isAnswered && handleTeamSelect(200)}
           className={`flex-1 transition-all duration-300 rounded-xl p-2 cursor-pointer relative z-10
             ${!isAnswered ? 'hover:bg-red-900/20' : ''}
@@ -594,10 +612,10 @@ function MatchCard({ match, index, onAnswer, onNext }) {
               {match.redBans.map((id, i) => {
                 const name = getChampNameById(id);
                 return name ? (
-                  <img 
-                    key={i} 
-                    src={getIconUrl(name)} 
-                    className="w-6 h-6 rounded grayscale border border-red-900/50 opacity-60" 
+                  <img
+                    key={i}
+                    src={getIconUrl(name)}
+                    className="w-6 h-6 rounded grayscale border border-red-900/50 opacity-60"
                     alt="ban"
                     onError={(e) => handleChampionImageError(e, name)}
                   />
@@ -618,7 +636,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
               />
             </div>
           )}
-          
+
           {/* 레드 픽 (세로 일렬) */}
           <div className="space-y-1.5">
             {match.redTeam?.map((name, i) => {
@@ -627,9 +645,9 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                 <div key={i} className="relative group flex flex-row-reverse items-center gap-1.5 bg-red-50 dark:bg-red-500/5 p-1 md:p-1.5 rounded-lg border-r-4 border-red-200 dark:border-red-500/50 hover:bg-red-100 dark:hover:bg-red-500/10 transition-colors backdrop-blur-sm z-[100] min-h-[56px]">
                   {/* 챔피언 아이콘 */}
                   <div className="relative z-[100]">
-                    <img 
-                      src={getIconUrl(name)} 
-                      className="w-10 h-10 md:w-12 md:h-12 rounded-lg shadow border border-red-500/30 flex-shrink-0 group-hover:scale-110 transition-transform duration-200" 
+                    <img
+                      src={getIconUrl(name)}
+                      className="w-10 h-10 md:w-14 md:h-14 rounded-lg shadow border border-red-500/30 flex-shrink-0 group-hover:scale-110 transition-transform duration-200"
                       alt={name}
                       onError={(e) => handleChampionImageError(e, name)}
                     />
@@ -657,40 +675,53 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                     </div>
                   </div>
                   <div className="text-right flex-1 min-w-0">
-                    <p className="text-[9px] md:text-[10px] text-red-800 dark:text-red-400 font-bold mb-0.5 uppercase tracking-wider">{positions[i] || ''}</p>
-                    <p className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-200 truncate">{getKoName(name)}</p>
-                    {isAnswered && playerDetails && playerDetails.items && (
-                      <div className="flex gap-0.5 mt-1 flex-wrap justify-end">
-                        {playerDetails.items.map((itemId, idx) => (
-                          <div
-                            key={idx}
-                            className={`w-4 h-4 rounded border ${
-                              itemId === 0 || !itemId
-                                ? 'bg-slate-200 dark:bg-gray-800 border-slate-300 dark:border-gray-700'
-                                : 'border-slate-400 dark:border-gray-600'
-                            } flex items-center justify-center`}
-                          >
-                            {itemId !== 0 && itemId ? (
-                              <img
-                                src={getItemUrl(itemId)}
-                                className="w-full h-full rounded"
-                                alt={`item ${itemId}`}
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                  e.target.parentElement.classList.add('bg-slate-200', 'dark:bg-gray-800');
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-slate-200 dark:bg-gray-800 rounded"></div>
-                            )}
+                    <div className="flex flex-row-reverse items-baseline gap-1.5">
+                      <p className="text-[9px] md:text-[10px] text-red-800 dark:text-red-400 font-bold uppercase tracking-wider">{positions[i] || ''}</p>
+                      <p className="text-[11px] md:text-base font-bold text-slate-900 dark:text-slate-200 truncate leading-tight">{getKoName(name)}</p>
+                    </div>
+
+                    {/* Mobile: KDA + Items Row */}
+                    {isAnswered && playerDetails && (
+                      <div className="flex flex-col md:flex-row-reverse md:items-center gap-0.5 md:gap-2 mt-0.5 items-end md:items-center">
+                        {/* Mobile KDA */}
+                        <span className="md:hidden text-[10px] text-red-800 dark:text-red-300 font-black whitespace-nowrap">
+                          {playerDetails.kills}/{playerDetails.deaths}/{playerDetails.assists}
+                        </span>
+
+                        {/* Items */}
+                        {playerDetails.items && (
+                          <div className="flex gap-0.5 md:gap-1 flex-nowrap justify-end">
+                            {playerDetails.items.map((itemId, idx) => (
+                              <div
+                                key={idx}
+                                className={`w-3 h-3 md:w-6 md:h-6 rounded border ${itemId === 0 || !itemId
+                                  ? 'bg-slate-200 dark:bg-gray-800 border-slate-300 dark:border-gray-700'
+                                  : 'border-slate-400 dark:border-gray-600'
+                                  } flex items-center justify-center`}
+                              >
+                                {itemId !== 0 && itemId ? (
+                                  <img
+                                    src={getItemUrl(itemId)}
+                                    className="w-full h-full rounded"
+                                    alt={`item ${itemId}`}
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.parentElement.classList.add('bg-slate-200', 'dark:bg-gray-800');
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-slate-200 dark:bg-gray-800 rounded"></div>
+                                )}
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
                       </div>
                     )}
                   </div>
                   {isAnswered && playerDetails && (
-                    <div className="text-left flex-shrink-0 ml-1 md:ml-2">
-                      <p className="text-[10px] md:text-xs text-red-800 dark:text-red-300 font-black whitespace-nowrap">
+                    <div className="hidden md:block text-left flex-shrink-0 ml-1 md:ml-2">
+                      <p className="text-[10px] md:text-sm text-red-800 dark:text-red-300 font-black whitespace-nowrap">
                         {playerDetails.kills}/{playerDetails.deaths}/{playerDetails.assists}
                       </p>
                     </div>
@@ -710,16 +741,16 @@ function MatchCard({ match, index, onAnswer, onNext }) {
         </div>
       )}
 
- {/* 정답/오답 결과 표시 UI (컴팩트 버전) */}
- {isAnswered && (
+      {/* 정답/오답 결과 표시 UI (컴팩트 버전) */}
+      {isAnswered && (
         <div className="mt-4 relative z-20 animate-in fade-in slide-in-from-bottom-2 duration-300 font-sans">
-          
+
           <div className={`relative overflow-hidden rounded-xl border flex items-center justify-between p-3 md:p-4 backdrop-blur-md transition-all duration-300 shadow-sm
-            ${isCorrect 
-              ? 'bg-green-50 dark:bg-green-950/40 border-green-300 dark:border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]' 
+            ${isCorrect
+              ? 'bg-green-50 dark:bg-green-950/40 border-green-300 dark:border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]'
               : 'bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.1)]'
             }`}>
-            
+
             {/* 배경 조명 효과 */}
             <div className={`absolute inset-0 opacity-5 bg-gradient-to-r pointer-events-none rounded-xl
               ${isCorrect ? 'from-green-400 to-transparent' : 'from-red-400 to-transparent'}`}>
@@ -740,12 +771,12 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                   </svg>
                 )}
               </div>
-              
+
               {/* 텍스트 (좌측 정렬) */}
               <div className="text-left">
                 <h2 className={`text-2xl md:text-2xl font-[1000] italic tracking-tighter uppercase leading-none
-                  ${isCorrect 
-                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-700 dark:from-green-200 dark:to-green-500' 
+                  ${isCorrect
+                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-700 dark:from-green-200 dark:to-green-500'
                     : 'text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-700 dark:from-red-200 dark:to-red-500'
                   }`}>
                   {isCorrect ? '정답!' : '오답!'}
@@ -757,7 +788,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
             </div>
 
             {/* 우측: 다음 버튼 (배너 안으로 통합) */}
-            <button 
+            <button
               onClick={onNext}
               className="relative z-10 group px-5 py-2 bg-indigo-600 hover:bg-indigo-500 border border-indigo-600 hover:border-indigo-700 text-white dark:bg-[#1a1c24] dark:hover:bg-[#23252e] dark:border-white/10 dark:hover:border-white/30 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg active:scale-95 flex-shrink-0"
             >
@@ -776,7 +807,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
       {/* 심층 분석 모드 - 전력 분석 + 골드 그래프 + 팀별 오브젝트 상세 */}
       {isAnswered && (
         <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/10 animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
-          
+
           {/* 전력 분석 섹션 (승리 확률 + 레이더 차트) */}
           {champData && match.blueTeamDetails && match.redTeamDetails && (
             <div className="mb-6 space-y-4">
@@ -794,7 +825,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                   const winProb = calculateWinProbability(blueStats, redStats, match.tier);
                   const blueProb = winProb?.blue ?? 50.0;
                   const redProb = winProb?.red ?? 50.0;
-                  
+
                   // 선택한 팀에 따라 승리 확률 결정
                   let selectedTeamProb = 50.0;
                   let isBlueTeam = false;
@@ -808,7 +839,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                     selectedTeamProb = blueProb;
                     isBlueTeam = true;
                   }
-                  
+
                   return (
                     <>
                       {/* 상단: 승리 확률 + 레이더 차트 (한 줄) */}
@@ -820,16 +851,15 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                               {selectedTeam ? '선택 팀 승리 확률' : 'WIN PROBABILITY'}
                             </p>
                             <h2
-                              className={`text-6xl md:text-7xl font-[1000] italic tracking-tighter ${
-                                isBlueTeam ? 'text-blue-700 dark:text-blue-500' : 'text-red-700 dark:text-red-500'
-                              } drop-shadow-[0_0_25px_rgba(59,130,246,0.45)]`}
+                              className={`text-6xl md:text-7xl font-[1000] italic tracking-tighter ${isBlueTeam ? 'text-blue-700 dark:text-blue-500' : 'text-red-700 dark:text-red-500'
+                                } drop-shadow-[0_0_25px_rgba(59,130,246,0.45)]`}
                             >
                               {selectedTeamProb.toFixed(1)}%
                             </h2>
                           </div>
                           <p className="mt-4 text-[11px] text-slate-600 dark:text-slate-500 font-medium text-center leading-relaxed">
                             *해당 확률은 실제 매치 데이터와 관계 없이  <br />
-                            양 팀의 챔피언 조합과 성장 기대치를 분석한 결과입니다. <br /> 
+                            양 팀의 챔피언 조합과 성장 기대치를 분석한 결과입니다. <br />
                             실제 매치 결과는 이 확률과 다를 수 있습니다.
                           </p>
                         </div>
@@ -844,9 +874,15 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                         {loadingAi ? (
                           <p className="text-slate-500 dark:text-slate-400 animate-pulse">매치 데이터를 정밀 분석 중입니다...</p>
                         ) : aiAnalysis ? (
-                          <div 
+                          <div
                             className="text-slate-700 dark:text-slate-300 leading-6 ai-analysis"
-                            dangerouslySetInnerHTML={{ __html: aiAnalysis }}
+                            dangerouslySetInnerHTML={{
+                              __html: aiAnalysis
+                                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                .replace(/<blue>(.*?)<\/blue>/g, '<strong>$1</strong>')
+                                .replace(/<red>(.*?)<\/red>/g, '<strong>$1</strong>')
+                                .replace(/<highlight>(.*?)<\/highlight>/g, '<strong>$1</strong>')
+                            }}
                           />
                         ) : (
                           <p className="text-slate-500 dark:text-slate-400">분석 데이터를 불러오는 중...</p>
@@ -875,7 +911,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
           {/* 팀별 오브젝트 상세 (디자인 개선: E-스포츠 분석 스타일) */}
           {(match.blueObjectives || match.redObjectives) && (
             <div className="mt-4 bg-white dark:bg-[#0a0a0c]/80 border border-slate-200 dark:border-white/5 rounded-2xl p-5 backdrop-blur-md shadow-sm">
-              
+
               {/* 헤더 */}
               <div className="flex items-center gap-2 mb-4 opacity-80">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-600 dark:text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
@@ -885,13 +921,13 @@ function MatchCard({ match, index, onAnswer, onNext }) {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
+
                 {/* 블루팀 (왼쪽) */}
-                <div className="relative group overflow-hidden rounded-xl bg-white dark:bg-gradient-to-br dark:from-blue-900/15 dark:to-blue-900/5 border border-blue-200 dark:border-blue-500/15 p-4 hover:border-blue-400 dark:hover:border-blue-500/30 transition-colors shadow-sm">
+                <div className="relative group overflow-hidden rounded-xl bg-blue-50 dark:bg-[#1a1c24] border border-blue-100 dark:border-white/5 p-4 hover:border-blue-400 dark:hover:border-blue-500/30 transition-colors shadow-sm">
                   <div className="flex justify-between items-center mb-3">
                     <span className="text-xs font-black text-blue-800 dark:text-blue-400 uppercase tracking-wider">블루팀</span>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {/* 몬스터 슬롯 */}
                     <div className="flex gap-2">
@@ -921,15 +957,19 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                         <div className="h-full bg-blue-600 dark:bg-blue-400 rounded-full" style={{ width: `${Math.min(((match.blueObjectives?.inhibitor || 0) / 3) * 100, 100)}%` }}></div>
                       </div>
                     </div>
+
+
+
+
                   </div>
                 </div>
 
                 {/* 레드팀 (오른쪽) */}
-                <div className="relative group overflow-hidden rounded-xl bg-white dark:bg-gradient-to-bl dark:from-red-900/15 dark:to-red-900/5 border border-red-200 dark:border-red-500/15 p-4 hover:border-red-400 dark:hover:border-red-500/30 transition-colors shadow-sm">
+                <div className="relative group overflow-hidden rounded-xl bg-red-50 dark:bg-[#1a1c24] border border-red-100 dark:border-white/5 p-4 hover:border-red-400 dark:hover:border-red-500/30 transition-colors shadow-sm">
                   <div className="flex justify-between items-center mb-3">
                     <span className="text-xs font-black text-red-800 dark:text-red-400 uppercase tracking-wider">레드팀</span>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {/* 몬스터 슬롯 */}
                     <div className="flex gap-2 justify-end">
