@@ -18,6 +18,8 @@ function MatchCard({ match, index, onAnswer, onNext }) {
   const [hoveredItemId, setHoveredItemId] = useState(null); // 현재 호버 중인 아이템 ID
   const [goldData, setGoldData] = useState(null); // 골드 차이 데이터
   const [loadingGold, setLoadingGold] = useState(false); // 골드 데이터 로딩 중
+  const [aiAnalysis, setAiAnalysis] = useState(''); // AI 분석 결과
+  const [loadingAi, setLoadingAi] = useState(false); // AI 분석 로딩 중
 
   useEffect(() => {
     const loadData = async () => {
@@ -40,6 +42,8 @@ function MatchCard({ match, index, onAnswer, onNext }) {
     setHoveredItemId(null);
     setGoldData(null);
     setLoadingGold(false);
+    setAiAnalysis('');
+    setLoadingAi(false);
   }, [match.matchId]);
 
   // 정답 확인 후 골드 데이터 로드
@@ -64,6 +68,65 @@ function MatchCard({ match, index, onAnswer, onNext }) {
       loadGoldData();
     }
   }, [isAnswered, match.matchId, goldData, loadingGold, champData]);
+
+  // AI 분석 호출 함수
+  const fetchAIAnalysis = async (blueStats, redStats, winProb) => {
+    setLoadingAi(true);
+    try {
+      // 주요 이벤트 추출 (펜타킬, 쿼드라킬, 바론, 장로드래곤, 억제기 등)
+      const importantEvents = [];
+      if (goldData && goldData.length > 0) {
+        goldData.forEach(frame => {
+          if (frame.matchEvents && frame.matchEvents.length > 0) {
+            frame.matchEvents.forEach(event => {
+              // 중요한 이벤트만 필터링
+              if (
+                event.type === 'penta' || 
+                event.type === 'kill' || // 트리플, 쿼드라킬
+                (event.type === 'obj' && (event.text.includes('바론') || event.text.includes('장로') || event.text.includes('억제기'))) ||
+                event.type === 'ace'
+              ) {
+                importantEvents.push(event);
+              }
+            });
+          }
+        });
+      }
+
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://118.223.39.153:8000';
+      const response = await fetch(`${API_BASE_URL}/api/analyze-match`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prediction: winProb,
+          actualWinner: match.승리팀ID,
+          tier: match.tier,
+          matchData: {
+            goldDiff: goldData ? goldData[goldData.length - 1].diff : 0,
+            baron: (match.blueObjectives?.baron || 0) + (match.redObjectives?.baron || 0),
+            dragon: (match.blueObjectives?.dragon || 0) + (match.redObjectives?.dragon || 0),
+            events: importantEvents.slice(0, 10) // 최대 10개 주요 이벤트만 전달
+          }
+        })
+      });
+      const data = await response.json();
+      setAiAnalysis(data.analysis);
+    } catch (err) {
+      console.error("AI 로드 실패", err);
+    } finally {
+      setLoadingAi(false);
+    }
+  };
+
+  // 정답 확인 후 AI 분석 호출
+  useEffect(() => {
+    if (isAnswered && goldData && !aiAnalysis && !loadingAi && champData) {
+      const blueStats = calculateTeamStats(match.blueTeamDetails, champData);
+      const redStats = calculateTeamStats(match.redTeamDetails, champData);
+      const winProb = calculateWinProbability(blueStats, redStats, match.tier);
+      fetchAIAnalysis(blueStats, redStats, winProb);
+    }
+  }, [isAnswered, goldData, aiAnalysis, loadingAi, champData, match]);
 
   // 랜덤 힌트 플레이어 선택
   useEffect(() => {
@@ -239,7 +302,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
   };
 
   return (
-    <div className={`relative bg-[#121216] border border-white/10 rounded-3xl p-4 md:p-6 overflow-visible transition-all duration-500 ${getCardShakeClass()} ${
+    <div className={`relative bg-white text-slate-900 dark:bg-[#121216] dark:text-slate-200 border border-slate-200 dark:border-white/10 rounded-3xl p-4 md:p-6 overflow-visible transition-all duration-500 shadow-md ${
       isAnswered 
         ? isCorrect 
           ? 'shadow-[0_0_15px_rgba(34,197,94,0.15),0_0_30px_rgba(34,197,94,0.08)] border-green-500/30' 
@@ -249,25 +312,25 @@ function MatchCard({ match, index, onAnswer, onNext }) {
 
       {/* 상단 타임라인/티어 정보 */}
       <div className="flex justify-between items-center mb-1">
-        <div className="flex items-center gap-2 bg-black/40 px-3 py-1 rounded-full border border-white/5">
-          <span className="text-[10px] font-bold text-slate-500">MATCH DURATION</span>
-          <span className="text-xs font-black text-slate-200">{match.gameDuration || '알 수 없음'}</span>
+        <div className="flex items-center gap-2 bg-slate-100 dark:bg-black/40 px-3 py-1 rounded-full border border-slate-200 dark:border-white/5">
+          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-500">MATCH DURATION</span>
+          <span className="text-xs font-black text-slate-900 dark:text-slate-200">{match.gameDuration || '알 수 없음'}</span>
         </div>
         <div className="flex items-center gap-2 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/30">
-          <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">{match.tier || 'MASTER'}</span>
+          <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest">{match.tier || 'MASTER'}</span>
         </div>
       </div>
       
 {/* 힌트 섹션: 컴팩트 스타일 + 오브젝트 정보 포함 */}
 {hintPlayer && !isAnswered && (
   <div className="flex flex-col gap-3 p-2 relative z-0">
-        <div className="mb-1 relative overflow-visible rounded-xl bg-[#16171b] border-l-4 border-yellow-500 shadow-lg animate-in fade-in slide-in-from-left-2 duration-500 z-0">
+        <div className="mb-1 relative overflow-visible rounded-xl bg-white dark:bg-[#16171b] border-l-4 border-yellow-500 shadow-md animate-in fade-in slide-in-from-left-2 duration-500 z-0">
           <div className="grid grid-cols-[auto_1fr] gap-4 items-center p-3">
             
             {/* 1. HINT 라벨 (좌측 고정) */}
-            <div className="flex flex-col items-center justify-center px-2 border-r border-white/5 gap-0.5 min-w-[50px]">
+            <div className="flex flex-col items-center justify-center px-2 border-r border-slate-200 dark:border-white/5 gap-0.5 min-w-[50px]">
               <span className="text-xl drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">💡</span>
-              <span className="text-[9px] font-black text-yellow-500 tracking-widest uppercase leading-none">HINT</span>
+              <span className="text-[9px] font-black text-yellow-600 dark:text-yellow-500 tracking-widest uppercase leading-none">HINT</span>
             </div>
 
             {/* 2. 정보 영역 - 챔피언 섹션과 동일한 너비 */}
@@ -279,7 +342,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                 <div className="relative flex-shrink-0">
                   <img 
                     src={getIconUrl(hintPlayer.championName)} 
-                    className={`w-10 h-10 rounded-lg border border-white/10 ${hintPlayer.team === 'blue' ? 'shadow-[0_0_10px_rgba(59,130,246,0.3)]' : 'shadow-[0_0_10px_rgba(239,68,68,0.3)]'}`}
+                    className={`w-10 h-10 rounded-lg border border-black/10 dark:border-white/10 ${hintPlayer.team === 'blue' ? 'shadow-[0_0_10px_rgba(59,130,246,0.3)]' : 'shadow-[0_0_10px_rgba(239,68,68,0.3)]'}`}
                     alt="Hint Champion"
                     onError={(e) => handleChampionImageError(e, hintPlayer.championName)}
                   />
@@ -291,15 +354,15 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                 {/* 텍스트 정보 */}
                 <div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-bold text-slate-200">{getKoName(hintPlayer.championName)}</span>
-                    <span className="text-[10px] text-slate-500 font-medium">CS {hintPlayer.totalMinionsKilled + hintPlayer.neutralMinionsKilled}</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-slate-200">{getKoName(hintPlayer.championName)}</span>
+                    <span className="text-[10px] text-slate-600 dark:text-slate-500 font-medium">CS {hintPlayer.totalMinionsKilled + hintPlayer.neutralMinionsKilled}</span>
                   </div>
 
                   {/* KDA 정보 */}
                   {hintPlayer.kills !== undefined && hintPlayer.deaths !== undefined && hintPlayer.assists !== undefined && (
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-slate-400 font-black">
-                        KDA: <span className="text-slate-200">{hintPlayer.kills}/{hintPlayer.deaths}/{hintPlayer.assists}</span>
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400 font-black">
+                        KDA: <span className="text-slate-900 dark:text-slate-200">{hintPlayer.kills}/{hintPlayer.deaths}/{hintPlayer.assists}</span>
                       </span>
                     </div>
                   )}
@@ -316,37 +379,37 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                       <div key={idx} className="relative group z-0">
                         <img 
                           src={getItemUrl(itemId)} 
-                          className="w-8 h-8 rounded border border-white/10 hover:border-yellow-500 transition-colors cursor-help bg-black/40" 
+                          className="w-8 h-8 rounded border border-slate-200 dark:border-white/10 hover:border-yellow-500 transition-colors cursor-help bg-slate-200 dark:bg-black/40" 
                           alt="item" 
                         />
                         {/* 아이템 툴팁 */}
                         {itemInfo && (
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 max-w-[280px] p-3 bg-[#0f1015]/95 backdrop-blur-xl border border-white/10 rounded-lg text-left opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-[50] shadow-2xl">
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 max-w-[280px] p-3 bg-white dark:bg-[#0f1015]/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-lg text-left opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-[50] shadow-2xl">
                             {/* 아이템 이름 */}
-                            <p className="text-xs font-black text-yellow-400 mb-1">{itemInfo.name}</p>
+                            <p className="text-xs font-black text-yellow-600 dark:text-yellow-400 mb-1">{itemInfo.name}</p>
                             
                             {/* 가격 정보 */}
-                            <p className="text-[10px] text-slate-500 font-bold mb-2">
-                              가격: <span className="text-yellow-200">{itemInfo.gold?.total || 0}</span>
+                            <p className="text-[10px] text-slate-600 dark:text-slate-500 font-bold mb-2">
+                              가격: <span className="text-yellow-700 dark:text-yellow-200">{itemInfo.gold?.total || 0}</span>
                               {itemInfo.gold?.base > 0 && ` (조합비: ${itemInfo.gold.base})`}
                             </p>
 
                             {/* 아이템 설명 (HTML 태그 제거 및 스타일링) */}
                             {itemInfo.description && (
                               <div 
-                                className="text-[10px] text-slate-300 leading-relaxed space-y-1 item-desc"
+                                className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed space-y-1 item-desc"
                                 dangerouslySetInnerHTML={{ 
                                   __html: (itemInfo.description || '')
                                     .replace(/<br>/g, '<br/>') // 줄바꿈 보존
-                                    .replace(/<attention>/g, '<span class="text-white font-bold">') // 중요 정보 강조
+                                    .replace(/<attention>/g, '<span class="text-slate-900 dark:text-white font-bold">') // 중요 정보 강조
                                     .replace(/<\/attention>/g, '</span>')
-                                    .replace(/<stats>/g, '<span class="text-blue-300 block mb-1">') // 스탯 정보 파란색
+                                    .replace(/<stats>/g, '<span class="text-blue-800 dark:text-blue-300 block mb-1">') // 스탯 정보 파란색
                                     .replace(/<\/stats>/g, '</span>')
-                                    .replace(/<passive>/g, '<span class="text-yellow-200 font-bold">') // 패시브 효과 노란색
+                                    .replace(/<passive>/g, '<span class="text-yellow-700 dark:text-yellow-200 font-bold">') // 패시브 효과 노란색
                                     .replace(/<\/passive>/g, '</span>')
-                                    .replace(/<active>/g, '<span class="text-orange-300 font-bold">') // 액티브 효과 주황색
+                                    .replace(/<active>/g, '<span class="text-orange-700 dark:text-orange-300 font-bold">') // 액티브 효과 주황색
                                     .replace(/<\/active>/g, '</span>')
-                                    .replace(/<mainText>/g, '<span class="text-slate-200">') // 메인 텍스트
+                                    .replace(/<mainText>/g, '<span class="text-slate-900 dark:text-slate-200">') // 메인 텍스트
                                     .replace(/<\/mainText>/g, '</span>')
                                     // 나머지 불필요한 태그 제거 (span, br은 보존)
                                     .replace(/<(?!\/?(span|br)\b)[^>]+>/gi, '')
@@ -380,9 +443,9 @@ function MatchCard({ match, index, onAnswer, onNext }) {
         >
           {/* 전체 팀 KDA 표시 */}
           {isAnswered && blueTeamKDA && (
-            <div className="mb-2 p-1.5 bg-blue-500/10 backdrop-blur-sm rounded-xl border border-blue-500/20 text-center">
-              <p className="text-[10px] text-blue-400 font-bold mb-0.5 uppercase tracking-wider">Overall KDA</p>
-              <p className="text-sm text-blue-300 font-black">
+            <div className="mb-2 p-1.5 bg-blue-50 dark:bg-blue-500/10 backdrop-blur-sm rounded-xl border border-blue-200 dark:border-blue-500/20 text-center">
+              <p className="text-[10px] text-blue-800 dark:text-blue-400 font-bold mb-0.5 uppercase tracking-wider">Overall KDA</p>
+              <p className="text-sm text-blue-800 dark:text-blue-300 font-black">
                 {blueTeamKDA.kills}/{blueTeamKDA.deaths}/{blueTeamKDA.assists}
               </p>
             </div>
@@ -401,7 +464,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                     onError={(e) => handleChampionImageError(e, name)}
                   />
                 ) : (
-                  <div key={i} className="w-6 h-6 bg-gray-800 rounded border border-gray-700" />
+                  <div key={i} className="w-6 h-6 bg-slate-200 dark:bg-gray-800 rounded border border-slate-300 dark:border-gray-700" />
                 );
               })}
             </div>
@@ -422,7 +485,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
             {match.blueTeam?.map((name, i) => {
               const playerDetails = getPlayerDetails(name, match.blueTeamDetails);
               return (
-                <div key={i} className="relative group flex items-center gap-1.5 bg-blue-500/5 p-1 md:p-1.5 rounded-lg border-l-4 border-blue-500/50 hover:bg-blue-500/10 transition-colors backdrop-blur-sm z-[100]">
+                <div key={i} className="relative group flex items-center gap-1.5 bg-blue-50 dark:bg-blue-500/5 p-1 md:p-1.5 rounded-lg border-l-4 border-blue-200 dark:border-blue-500/50 hover:bg-blue-100 dark:hover:bg-blue-500/10 transition-colors backdrop-blur-sm z-[100] min-h-[56px]">
                   {/* 챔피언 아이콘 */}
                   <div className="relative z-[100]">
                     <img 
@@ -432,31 +495,31 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                       onError={(e) => handleChampionImageError(e, name)}
                     />
                     {/* 호버 툴팁 */}
-                    <div className="absolute bottom-full left-0 mb-2 w-48 p-3 bg-black/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-[9999]">
+                    <div className="absolute bottom-full left-0 mb-2 w-48 p-3 bg-white dark:bg-black/90 backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-[9999]">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-black text-white">{getKoName(name)}</span>
+                        <span className="text-sm font-black text-slate-900 dark:text-white">{getKoName(name)}</span>
                         {(() => {
                           const champ = getChampionData(name);
                           return champ?.title && (
-                            <span className="text-[10px] text-indigo-400 font-bold px-1.5 py-0.5 bg-indigo-500/10 rounded">
+                            <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold px-1.5 py-0.5 bg-indigo-500/10 rounded">
                               {champ.title}
                             </span>
                           );
                         })()}
                       </div>
-                      <p className="text-[10px] text-slate-400 leading-relaxed line-clamp-2">
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">
                         {(() => {
                           const champ = getChampionData(name);
                           return champ?.blurb || '상세 정보가 없습니다.';
                         })()}
                       </p>
                       {/* 삼각형 화살표 */}
-                      <div className="absolute top-full left-5 border-8 border-transparent border-t-black/90"></div>
+                      <div className="absolute top-full left-5 border-8 border-transparent border-t-white dark:border-t-black/90"></div>
                     </div>
                   </div>
                   <div className="text-left flex-1 min-w-0">
-                    <p className="text-[9px] md:text-[10px] text-blue-400 font-bold mb-0.5 uppercase tracking-wider">{positions[i] || ''}</p>
-                    <p className="text-xs md:text-sm font-bold text-slate-200 truncate">{getKoName(name)}</p>
+                    <p className="text-[9px] md:text-[10px] text-blue-800 dark:text-blue-400 font-bold mb-0.5 uppercase tracking-wider">{positions[i] || ''}</p>
+                    <p className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-200 truncate">{getKoName(name)}</p>
                     {isAnswered && playerDetails && playerDetails.items && (
                       <div className="flex gap-0.5 mt-1 flex-wrap">
                         {playerDetails.items.map((itemId, idx) => (
@@ -464,8 +527,8 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                             key={idx}
                             className={`w-4 h-4 rounded border ${
                               itemId === 0 || !itemId
-                                ? 'bg-gray-800 border-gray-700'
-                                : 'border-gray-600'
+                                ? 'bg-slate-200 dark:bg-gray-800 border-slate-300 dark:border-gray-700'
+                                : 'border-slate-400 dark:border-gray-600'
                             } flex items-center justify-center`}
                           >
                             {itemId !== 0 && itemId ? (
@@ -475,11 +538,11 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                                 alt={`item ${itemId}`}
                                 onError={(e) => {
                                   e.target.style.display = 'none';
-                                  e.target.parentElement.classList.add('bg-gray-800');
+                                  e.target.parentElement.classList.add('bg-slate-200', 'dark:bg-gray-800');
                                 }}
                               />
                             ) : (
-                              <div className="w-full h-full bg-gray-800 rounded"></div>
+                              <div className="w-full h-full bg-slate-200 dark:bg-gray-800 rounded"></div>
                             )}
                           </div>
                         ))}
@@ -488,7 +551,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                   </div>
                   {isAnswered && playerDetails && (
                     <div className="text-right flex-shrink-0 mr-1 md:mr-2">
-                      <p className="text-[10px] md:text-xs text-blue-300 font-black whitespace-nowrap">
+                      <p className="text-[10px] md:text-xs text-blue-800 dark:text-blue-300 font-black whitespace-nowrap">
                         {playerDetails.kills}/{playerDetails.deaths}/{playerDetails.assists}
                       </p>
                     </div>
@@ -501,9 +564,9 @@ function MatchCard({ match, index, onAnswer, onNext }) {
 
         {/* VS 중앙 */}
         <div className="flex flex-col items-center gap-1">
-          <div className="h-16 w-[1px] bg-gradient-to-b from-transparent via-slate-700 to-transparent"></div>
-          <span className={`text-3xl font-[1000] italic text-slate-800 tracking-tighter transition-all duration-500 ${isAnswered ? 'scale-0 opacity-0' : ''}`}>VS</span>
-          <div className="h-16 w-[1px] bg-gradient-to-b from-transparent via-slate-700 to-transparent"></div>
+          <div className="h-16 w-[1px] bg-gradient-to-b from-transparent via-slate-400 dark:via-slate-700 to-transparent"></div>
+          <span className={`text-3xl font-[1000] italic text-slate-700 dark:text-slate-800 tracking-tighter transition-all duration-500 ${isAnswered ? 'scale-0 opacity-0' : ''}`}>VS</span>
+          <div className="h-16 w-[1px] bg-gradient-to-b from-transparent via-slate-400 dark:via-slate-700 to-transparent"></div>
         </div>
 
         {/* 레드팀 구역 */}
@@ -518,9 +581,9 @@ function MatchCard({ match, index, onAnswer, onNext }) {
         >
           {/* 전체 팀 KDA 표시 */}
           {isAnswered && redTeamKDA && (
-            <div className="mb-2 p-1.5 bg-red-500/10 backdrop-blur-sm rounded-xl border border-red-500/20 text-center">
-              <p className="text-[10px] text-red-400 font-bold mb-0.5 uppercase tracking-wider">Overall KDA</p>
-              <p className="text-sm text-red-300 font-black">
+            <div className="mb-2 p-1.5 bg-red-50 dark:bg-red-500/10 backdrop-blur-sm rounded-xl border border-red-200 dark:border-red-500/20 text-center">
+              <p className="text-[10px] text-red-800 dark:text-red-400 font-bold mb-0.5 uppercase tracking-wider">Overall KDA</p>
+              <p className="text-sm text-red-800 dark:text-red-300 font-black">
                 {redTeamKDA.kills}/{redTeamKDA.deaths}/{redTeamKDA.assists}
               </p>
             </div>
@@ -539,7 +602,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                     onError={(e) => handleChampionImageError(e, name)}
                   />
                 ) : (
-                  <div key={i} className="w-6 h-6 bg-gray-800 rounded border border-gray-700" />
+                  <div key={i} className="w-6 h-6 bg-slate-200 dark:bg-gray-800 rounded border border-slate-300 dark:border-gray-700" />
                 );
               })}
             </div>
@@ -561,7 +624,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
             {match.redTeam?.map((name, i) => {
               const playerDetails = getPlayerDetails(name, match.redTeamDetails);
               return (
-                <div key={i} className="relative group flex flex-row-reverse items-center gap-1.5 bg-red-500/5 p-1 md:p-1.5 rounded-lg border-r-4 border-red-500/50 hover:bg-red-500/10 transition-colors backdrop-blur-sm z-[100]">
+                <div key={i} className="relative group flex flex-row-reverse items-center gap-1.5 bg-red-50 dark:bg-red-500/5 p-1 md:p-1.5 rounded-lg border-r-4 border-red-200 dark:border-red-500/50 hover:bg-red-100 dark:hover:bg-red-500/10 transition-colors backdrop-blur-sm z-[100] min-h-[56px]">
                   {/* 챔피언 아이콘 */}
                   <div className="relative z-[100]">
                     <img 
@@ -571,9 +634,9 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                       onError={(e) => handleChampionImageError(e, name)}
                     />
                     {/* 호버 툴팁 */}
-                    <div className="absolute bottom-full right-0 mb-2 w-48 p-3 bg-black/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-[9999]">
+                    <div className="absolute bottom-full right-0 mb-2 w-48 p-3 bg-white dark:bg-black/90 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 z-[9999]">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-black text-white">{getKoName(name)}</span>
+                        <span className="text-sm font-black text-slate-900 dark:text-white">{getKoName(name)}</span>
                         {(() => {
                           const champ = getChampionData(name);
                           return champ?.title && (
@@ -594,8 +657,8 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                     </div>
                   </div>
                   <div className="text-right flex-1 min-w-0">
-                    <p className="text-[9px] md:text-[10px] text-red-400 font-bold mb-0.5 uppercase tracking-wider">{positions[i] || ''}</p>
-                    <p className="text-xs md:text-sm font-bold text-slate-200 truncate">{getKoName(name)}</p>
+                    <p className="text-[9px] md:text-[10px] text-red-800 dark:text-red-400 font-bold mb-0.5 uppercase tracking-wider">{positions[i] || ''}</p>
+                    <p className="text-xs md:text-sm font-bold text-slate-900 dark:text-slate-200 truncate">{getKoName(name)}</p>
                     {isAnswered && playerDetails && playerDetails.items && (
                       <div className="flex gap-0.5 mt-1 flex-wrap justify-end">
                         {playerDetails.items.map((itemId, idx) => (
@@ -603,8 +666,8 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                             key={idx}
                             className={`w-4 h-4 rounded border ${
                               itemId === 0 || !itemId
-                                ? 'bg-gray-800 border-gray-700'
-                                : 'border-gray-600'
+                                ? 'bg-slate-200 dark:bg-gray-800 border-slate-300 dark:border-gray-700'
+                                : 'border-slate-400 dark:border-gray-600'
                             } flex items-center justify-center`}
                           >
                             {itemId !== 0 && itemId ? (
@@ -614,11 +677,11 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                                 alt={`item ${itemId}`}
                                 onError={(e) => {
                                   e.target.style.display = 'none';
-                                  e.target.parentElement.classList.add('bg-gray-800');
+                                  e.target.parentElement.classList.add('bg-slate-200', 'dark:bg-gray-800');
                                 }}
                               />
                             ) : (
-                              <div className="w-full h-full bg-gray-800 rounded"></div>
+                              <div className="w-full h-full bg-slate-200 dark:bg-gray-800 rounded"></div>
                             )}
                           </div>
                         ))}
@@ -627,7 +690,7 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                   </div>
                   {isAnswered && playerDetails && (
                     <div className="text-left flex-shrink-0 ml-1 md:ml-2">
-                      <p className="text-[10px] md:text-xs text-red-300 font-black whitespace-nowrap">
+                      <p className="text-[10px] md:text-xs text-red-800 dark:text-red-300 font-black whitespace-nowrap">
                         {playerDetails.kills}/{playerDetails.deaths}/{playerDetails.assists}
                       </p>
                     </div>
@@ -642,8 +705,8 @@ function MatchCard({ match, index, onAnswer, onNext }) {
 
       {/* 승리팀 선택 안내 */}
       {!isAnswered && (
-        <div className="mt-4 pt-3 border-t border-white/10">
-          <p className="text-center text-slate-500 mb-2 font-semibold text-sm uppercase tracking-wider">승리 팀을 선택해주세요!</p>
+        <div className="mt-4 pt-3 border-t border-slate-200 dark:border-white/10">
+          <p className="text-center text-slate-600 dark:text-slate-500 mb-2 font-semibold text-sm uppercase tracking-wider">승리 팀을 선택해주세요!</p>
         </div>
       )}
 
@@ -651,10 +714,10 @@ function MatchCard({ match, index, onAnswer, onNext }) {
  {isAnswered && (
         <div className="mt-4 relative z-20 animate-in fade-in slide-in-from-bottom-2 duration-300 font-sans">
           
-          <div className={`relative overflow-hidden rounded-xl border flex items-center justify-between p-3 md:p-4 backdrop-blur-md transition-all duration-300
+          <div className={`relative overflow-hidden rounded-xl border flex items-center justify-between p-3 md:p-4 backdrop-blur-md transition-all duration-300 shadow-sm
             ${isCorrect 
-              ? 'bg-green-950/40 border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]' 
-              : 'bg-red-950/40 border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.1)]'
+              ? 'bg-green-50 dark:bg-green-950/40 border-green-300 dark:border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]' 
+              : 'bg-red-50 dark:bg-red-950/40 border-red-300 dark:border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.1)]'
             }`}>
             
             {/* 배경 조명 효과 */}
@@ -668,11 +731,11 @@ function MatchCard({ match, index, onAnswer, onNext }) {
               <div className={`w-10 h-10 rounded-full flex items-center justify-center border shadow-lg flex-shrink-0
                 ${isCorrect ? 'bg-green-500/20 border-green-500/30 shadow-green-500/20' : 'bg-red-500/20 border-red-500/30 shadow-red-500/20'}`}>
                 {isCorrect ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 )}
@@ -682,12 +745,12 @@ function MatchCard({ match, index, onAnswer, onNext }) {
               <div className="text-left">
                 <h2 className={`text-2xl md:text-2xl font-[1000] italic tracking-tighter uppercase leading-none
                   ${isCorrect 
-                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-green-200 to-green-500' 
-                    : 'text-transparent bg-clip-text bg-gradient-to-r from-red-200 to-red-500'
+                    ? 'text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-green-700 dark:from-green-200 dark:to-green-500' 
+                    : 'text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-red-700 dark:from-red-200 dark:to-red-500'
                   }`}>
                   {isCorrect ? '정답!' : '오답!'}
                 </h2>
-                <p className={`text-[10px] font-bold uppercase tracking-widest ${isCorrect ? 'text-green-300/60' : 'text-red-300/60'}`}>
+                <p className={`text-[10px] font-bold uppercase tracking-widest ${isCorrect ? 'text-green-800 dark:text-green-300/60' : 'text-red-800 dark:text-red-300/60'}`}>
                   {isCorrect ? '예측에 성공하였습니다.' : '예측에 실패하였습니다.'}
                 </p>
               </div>
@@ -696,11 +759,11 @@ function MatchCard({ match, index, onAnswer, onNext }) {
             {/* 우측: 다음 버튼 (배너 안으로 통합) */}
             <button 
               onClick={onNext}
-              className="relative z-10 group px-5 py-2 bg-[#1a1c24] hover:bg-[#23252e] border border-white/10 hover:border-white/30 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg active:scale-95 flex-shrink-0"
+              className="relative z-10 group px-5 py-2 bg-indigo-600 hover:bg-indigo-500 border border-indigo-600 hover:border-indigo-700 text-white dark:bg-[#1a1c24] dark:hover:bg-[#23252e] dark:border-white/10 dark:hover:border-white/30 rounded-lg overflow-hidden transition-all duration-200 hover:shadow-lg active:scale-95 flex-shrink-0"
             >
               <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-slate-200 uppercase tracking-wide group-hover:text-white">Next</span>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-slate-400 group-hover:text-white transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <span className="text-xs font-black text-white dark:text-slate-200 uppercase tracking-wide group-hover:text-white">Next</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white dark:text-slate-400 group-hover:text-white transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -712,16 +775,16 @@ function MatchCard({ match, index, onAnswer, onNext }) {
 
       {/* 심층 분석 모드 - 전력 분석 + 골드 그래프 + 팀별 오브젝트 상세 */}
       {isAnswered && (
-        <div className="mt-6 pt-4 border-t border-white/10 animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
+        <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/10 animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-4">
           
           {/* 전력 분석 섹션 (승리 확률 + 레이더 차트) */}
           {champData && match.blueTeamDetails && match.redTeamDetails && (
             <div className="mb-6 space-y-4">
               <div className="flex items-center gap-2 opacity-80">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-500" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-600 dark:text-purple-500" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                 </svg>
-                <span className="text-[14px] font-black text-purple-500 uppercase tracking-[0.2em]">전력 분석</span>
+                <span className="text-[14px] font-black text-purple-600 dark:text-purple-500 uppercase tracking-[0.2em]">전력 분석</span>
               </div>
 
               <div className="flex flex-col gap-6">
@@ -751,20 +814,20 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                       {/* 상단: 승리 확률 + 레이더 차트 (한 줄) */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* 왼쪽: 승리 확률 */}
-                        <div className="bg-gradient-to-br from-[#121216] to-[#0d0d0f] border border-white/5 rounded-3xl p-7 md:p-8 flex flex-col items-center justify-center shadow-lg relative overflow-hidden min-h-[320px]">
+                        <div className="bg-white dark:bg-gradient-to-br dark:from-[#121216] dark:to-[#0d0d0f] border border-slate-200 dark:border-white/5 rounded-3xl p-7 md:p-8 flex flex-col items-center justify-center shadow-md relative overflow-hidden min-h-[320px]">
                           <div className="text-center mb-2">
-                            <p className="text-slate-500 text-[15px] font-black tracking-[0.2em] mb-3 uppercase">
+                            <p className="text-slate-600 dark:text-slate-500 text-[15px] font-black tracking-[0.2em] mb-3 uppercase">
                               {selectedTeam ? '선택 팀 승리 확률' : 'WIN PROBABILITY'}
                             </p>
                             <h2
                               className={`text-6xl md:text-7xl font-[1000] italic tracking-tighter ${
-                                isBlueTeam ? 'text-blue-500' : 'text-red-500'
+                                isBlueTeam ? 'text-blue-700 dark:text-blue-500' : 'text-red-700 dark:text-red-500'
                               } drop-shadow-[0_0_25px_rgba(59,130,246,0.45)]`}
                             >
                               {selectedTeamProb.toFixed(1)}%
                             </h2>
                           </div>
-                          <p className="mt-4 text-[11px] text-slate-500 font-medium text-center leading-relaxed">
+                          <p className="mt-4 text-[11px] text-slate-600 dark:text-slate-500 font-medium text-center leading-relaxed">
                             *해당 확률은 실제 매치 데이터와 관계 없이  <br />
                             양 팀의 챔피언 조합과 성장 기대치를 분석한 결과입니다. <br /> 
                             실제 매치 결과는 이 확률과 다를 수 있습니다.
@@ -775,15 +838,20 @@ function MatchCard({ match, index, onAnswer, onNext }) {
                         <TeamRadarChart blueStats={blueStats.radarData} redStats={redStats.radarData} />
                       </div>
 
-                      {/* 하단: 분석 코멘트 박스 (전체 너비) */}
-                      {winProb?.comment && (
-                        <div className="bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-[12px] leading-relaxed text-slate-200 text-left">
-                          <p className="text-sm font-black text-slate-100 mb-1">분석 코멘트</p>
-                          <p className="text-slate-300 whitespace-pre-line">
-                            {winProb.comment}
-                          </p>
-                        </div>
-                      )}
+                      {/* 하단: AI 분석 코멘트 박스 (전체 너비) */}
+                      <div className="bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-2xl px-4 py-3 text-[12px] leading-relaxed shadow-sm">
+                        <p className="text-sm font-black text-indigo-600 dark:text-indigo-400 mb-1">🤖 AI 전문 분석가 코멘트</p>
+                        {loadingAi ? (
+                          <p className="text-slate-500 dark:text-slate-400 animate-pulse">매치 데이터를 정밀 분석 중입니다...</p>
+                        ) : aiAnalysis ? (
+                          <div 
+                            className="text-slate-700 dark:text-slate-300 leading-6 ai-analysis"
+                            dangerouslySetInnerHTML={{ __html: aiAnalysis }}
+                          />
+                        ) : (
+                          <p className="text-slate-500 dark:text-slate-400">분석 데이터를 불러오는 중...</p>
+                        )}
+                      </div>
                     </>
                   );
                 })()}
@@ -793,35 +861,35 @@ function MatchCard({ match, index, onAnswer, onNext }) {
 
           {/* 골드 그래프 */}
           {loadingGold ? (
-            <div className="bg-[#0a0a0c]/80 border border-white/5 rounded-2xl p-8 backdrop-blur-md text-center">
-              <p className="text-slate-400 text-sm">골드 데이터 분석 중...</p>
+            <div className="bg-white dark:bg-[#0a0a0c]/80 border border-slate-200 dark:border-white/5 rounded-2xl p-8 backdrop-blur-md text-center shadow-sm">
+              <p className="text-slate-600 dark:text-slate-400 text-sm">골드 데이터 분석 중...</p>
             </div>
           ) : goldData && goldData.length > 0 ? (
             <GoldGraph data={goldData} winningTeam={match.승리팀ID} />
           ) : (
-            <div className="bg-[#0a0a0c]/80 border border-white/5 rounded-2xl p-4 backdrop-blur-md text-center">
-              <p className="text-slate-500 text-sm">골드 데이터를 불러올 수 없습니다.</p>
+            <div className="bg-white dark:bg-[#0a0a0c]/80 border border-slate-200 dark:border-white/5 rounded-2xl p-4 backdrop-blur-md text-center shadow-sm">
+              <p className="text-slate-600 dark:text-slate-500 text-sm">골드 데이터를 불러올 수 없습니다.</p>
             </div>
           )}
 
           {/* 팀별 오브젝트 상세 (디자인 개선: E-스포츠 분석 스타일) */}
           {(match.blueObjectives || match.redObjectives) && (
-            <div className="mt-4 bg-[#0a0a0c]/80 border border-white/5 rounded-2xl p-5 backdrop-blur-md">
+            <div className="mt-4 bg-white dark:bg-[#0a0a0c]/80 border border-slate-200 dark:border-white/5 rounded-2xl p-5 backdrop-blur-md shadow-sm">
               
               {/* 헤더 */}
               <div className="flex items-center gap-2 mb-4 opacity-80">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-600 dark:text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
-                <span className="text-[14px] font-black text-yellow-500 uppercase tracking-[0.2em]">오브젝트 컨트롤</span>
+                <span className="text-[14px] font-black text-yellow-600 dark:text-yellow-500 uppercase tracking-[0.2em]">오브젝트 컨트롤</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 
                 {/* 블루팀 (왼쪽) */}
-                <div className="relative group overflow-hidden rounded-xl bg-gradient-to-br from-blue-900/15 to-blue-900/5 border border-blue-500/15 p-4 hover:border-blue-500/30 transition-colors">
+                <div className="relative group overflow-hidden rounded-xl bg-white dark:bg-gradient-to-br dark:from-blue-900/15 dark:to-blue-900/5 border border-blue-200 dark:border-blue-500/15 p-4 hover:border-blue-400 dark:hover:border-blue-500/30 transition-colors shadow-sm">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-black text-blue-400 uppercase tracking-wider">블루팀</span>
+                    <span className="text-xs font-black text-blue-800 dark:text-blue-400 uppercase tracking-wider">블루팀</span>
                   </div>
                   
                   <div className="space-y-3">
@@ -834,32 +902,32 @@ function MatchCard({ match, index, onAnswer, onNext }) {
 
                     {/* 포탑 게이지 */}
                     <div>
-                      <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                      <div className="flex justify-between text-[10px] text-slate-600 dark:text-slate-400 mb-1">
                         <span>포탑 파괴</span>
-                        <span className="font-bold text-white">{match.blueObjectives?.tower || 0}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{match.blueObjectives?.tower || 0}</span>
                       </div>
-                      <div className="h-1.5 w-full bg-blue-900/30 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(((match.blueObjectives?.tower || 0) / 11) * 100, 100)}%` }}></div>
+                      <div className="h-1.5 w-full bg-blue-200 dark:bg-blue-900/30 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-600 dark:bg-blue-500 rounded-full" style={{ width: `${Math.min(((match.blueObjectives?.tower || 0) / 11) * 100, 100)}%` }}></div>
                       </div>
                     </div>
 
                     {/* 억제기 게이지 */}
                     <div>
-                      <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                      <div className="flex justify-between text-[10px] text-slate-600 dark:text-slate-400 mb-1">
                         <span>억제기</span>
-                        <span className="font-bold text-white">{match.blueObjectives?.inhibitor || 0}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{match.blueObjectives?.inhibitor || 0}</span>
                       </div>
-                      <div className="h-1.5 w-full bg-blue-900/30 rounded-full overflow-hidden">
-                        <div className="h-full bg-blue-400 rounded-full" style={{ width: `${Math.min(((match.blueObjectives?.inhibitor || 0) / 3) * 100, 100)}%` }}></div>
+                      <div className="h-1.5 w-full bg-blue-200 dark:bg-blue-900/30 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-600 dark:bg-blue-400 rounded-full" style={{ width: `${Math.min(((match.blueObjectives?.inhibitor || 0) / 3) * 100, 100)}%` }}></div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* 레드팀 (오른쪽) */}
-                <div className="relative group overflow-hidden rounded-xl bg-gradient-to-bl from-red-900/15 to-red-900/5 border border-red-500/15 p-4 hover:border-red-500/30 transition-colors">
+                <div className="relative group overflow-hidden rounded-xl bg-white dark:bg-gradient-to-bl dark:from-red-900/15 dark:to-red-900/5 border border-red-200 dark:border-red-500/15 p-4 hover:border-red-400 dark:hover:border-red-500/30 transition-colors shadow-sm">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-black text-red-400 uppercase tracking-wider">레드팀</span>
+                    <span className="text-xs font-black text-red-800 dark:text-red-400 uppercase tracking-wider">레드팀</span>
                   </div>
                   
                   <div className="space-y-3">
@@ -872,23 +940,23 @@ function MatchCard({ match, index, onAnswer, onNext }) {
 
                     {/* 포탑 게이지 */}
                     <div>
-                      <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                        <span className="font-bold text-white">{match.redObjectives?.tower || 0}</span>
+                      <div className="flex justify-between text-[10px] text-slate-600 dark:text-slate-400 mb-1">
+                        <span className="font-bold text-slate-900 dark:text-white">{match.redObjectives?.tower || 0}</span>
                         <span>포탑 파괴</span>
                       </div>
-                      <div className="h-1.5 w-full bg-red-900/30 rounded-full overflow-hidden flex justify-end">
-                        <div className="h-full bg-red-500 rounded-full" style={{ width: `${Math.min(((match.redObjectives?.tower || 0) / 11) * 100, 100)}%` }}></div>
+                      <div className="h-1.5 w-full bg-red-200 dark:bg-red-900/30 rounded-full overflow-hidden flex justify-end">
+                        <div className="h-full bg-red-600 dark:bg-red-500 rounded-full" style={{ width: `${Math.min(((match.redObjectives?.tower || 0) / 11) * 100, 100)}%` }}></div>
                       </div>
                     </div>
 
                     {/* 억제기 게이지 */}
                     <div>
-                      <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                        <span className="font-bold text-white">{match.redObjectives?.inhibitor || 0}</span>
+                      <div className="flex justify-between text-[10px] text-slate-600 dark:text-slate-400 mb-1">
+                        <span className="font-bold text-slate-900 dark:text-white">{match.redObjectives?.inhibitor || 0}</span>
                         <span>억제기</span>
                       </div>
-                      <div className="h-1.5 w-full bg-red-900/30 rounded-full overflow-hidden flex justify-end">
-                        <div className="h-full bg-red-400 rounded-full" style={{ width: `${Math.min(((match.redObjectives?.inhibitor || 0) / 3) * 100, 100)}%` }}></div>
+                      <div className="h-1.5 w-full bg-red-200 dark:bg-red-900/30 rounded-full overflow-hidden flex justify-end">
+                        <div className="h-full bg-red-600 dark:bg-red-400 rounded-full" style={{ width: `${Math.min(((match.redObjectives?.inhibitor || 0) / 3) * 100, 100)}%` }}></div>
                       </div>
                     </div>
                   </div>
@@ -947,9 +1015,9 @@ function ObjectBadge({ type, count, color, bgColor, borderColor }) {
       <span className={`text-[12px] font-black ${color}`}>{count || 0}</span>
 
       {isHovered && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 border border-white/10 rounded text-[10px] font-bold text-white whitespace-nowrap z-[100] animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white dark:bg-black/90 border border-slate-200 dark:border-white/10 rounded text-[10px] font-bold text-slate-900 dark:text-white whitespace-nowrap z-[100] animate-in fade-in zoom-in-95 duration-100 shadow-md">
           {labels[type]}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black/90"></div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-white dark:border-t-black/90"></div>
         </div>
       )}
     </div>

@@ -31,7 +31,7 @@ const DamageTypeAnalysis = ({ teamDetails = [], champData, version, isRed = fals
       </div>
 
       {/* 데미지 타입 바 */}
-      <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden flex">
+      <div className="w-full h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden flex">
         <div
           style={{ width: `${adPercent}%` }}
           className="h-full bg-gradient-to-r from-orange-500 to-amber-400"

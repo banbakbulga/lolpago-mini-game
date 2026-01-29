@@ -108,7 +108,7 @@ function MatchCollection() {
   const currentMatch = matches[currentIndex];
 
   return (
-    <div className="w-full min-h-screen bg-[#0a0a0c] text-slate-200 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
+    <div className="w-full min-h-screen bg-slate-100 text-slate-900 dark:bg-[#0a0a0c] dark:text-slate-200 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
       {/* 배경 그리드 패턴 */}
       <div className="fixed inset-0 opacity-10 pointer-events-none" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
@@ -138,12 +138,12 @@ function MatchCollection() {
               {/* 퀴즈 설명 */}
               <div className="max-w-2xl mx-auto mb-10 space-y-6">
                 {/* 이용 가이드 섹션 */}
-                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 md:p-8 text-center">
-                  <h2 className="text-2xl md:text-3xl font-black text-slate-100 mb-6 flex items-center justify-center gap-3">
+                <div className="bg-white border border-slate-200 dark:bg-white/5 dark:border-white/10 backdrop-blur-sm rounded-2xl p-6 md:p-8 text-center shadow-md">
+                  <h2 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-slate-100 mb-6 flex items-center justify-center gap-3">
 
                     <span>이용 가이드</span>
                   </h2>
-                  <div className="space-y-4 text-slate-300 text-sm md:text-base leading-relaxed">
+                  <div className="space-y-4 text-slate-700 dark:text-slate-300 text-sm md:text-base leading-relaxed">
                     <p className="leading-7 px-2">
                       실제 라이엇 API 데이터를 기반으로 한 고도의 심리 분석 퀴즈입니다.
                     </p>
@@ -151,13 +151,13 @@ function MatchCollection() {
                     <p className="leading-7 px-2">
                       각 경기에서 제공되는 <span className="text-yellow-400 font-bold">힌트</span>를 분석하여 승리팀을 맞춰보세요!
                     </p>
-                    <div className="mt-6 pt-6 border-t border-white/10 flex flex-col items-center">
-                      <p className="text-xs text-slate-400 mb-4 font-bold uppercase tracking-wider flex items-center gap-2">
+                    <div className="mt-6 pt-6 border-t border-black/10 dark:border-white/10 flex flex-col items-center">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 font-bold uppercase tracking-wider flex items-center gap-2">
                         <span className="text-orange-400">⚔️</span>
                         <span>게임 규칙</span>
                         <span className="text-orange-400">⚔️</span>
                       </p>
-                      <ul className="space-y-3 text-xs md:text-sm text-slate-400 flex flex-col items-center">
+                      <ul className="space-y-3 text-xs md:text-sm text-slate-600 dark:text-slate-400 flex flex-col items-center">
                         <li className="flex items-center gap-3 leading-6">
                           
                           <span>10개의 경기를 순차적으로 풀어보세요</span>
@@ -176,21 +176,20 @@ function MatchCollection() {
                 </div>
 
                 {/* 콤보 보상 시스템 섹션 */}
-                <div className="relative bg-gradient-to-br from-yellow-900/20 via-orange-900/15 to-yellow-900/20 backdrop-blur-sm border-2 border-yellow-500/40 rounded-2xl p-6 md:p-8 shadow-[0_0_40px_rgba(234,179,8,0.2)] overflow-hidden mx-auto text-center">
-                  {/* 네온 효과 배경 */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/0 via-yellow-500/10 to-yellow-500/0 opacity-50 animate-pulse"></div>
+                <div className="relative bg-white dark:bg-[#111827] border border-slate-200 dark:border-yellow-500/40 rounded-2xl p-6 md:p-8 shadow-md overflow-hidden mx-auto text-center">
+                  {/* 상단 하이라이트 바 */}
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 opacity-90" />
                   
                   <div className="relative z-10">
-                    <h3 className="text-xl md:text-2xl font-black text-yellow-400 mb-4 flex items-center justify-center gap-2">
+                    <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-yellow-300 mb-4 flex items-center justify-center gap-2">
                       <span className="text-2xl">🎁</span>
                       <span>콤보 달성 특혜 : 스킨 선물 이벤트</span>
                       <span className="text-2xl">🎁</span>
                     </h3>
-                    <div className="space-y-4 text-slate-200 text-sm md:text-base leading-relaxed">
+                    <div className="space-y-4 text-slate-700 dark:text-slate-200 text-sm md:text-base leading-relaxed">
                       <p className="leading-7 px-2">
-                        연속 정답 시 콤보가 쌓이며, 특정 콤보 달성 시 <span className="text-yellow-300 font-bold">스킨 선물</span>을 드립니다.
+                        연속 정답 시 콤보가 쌓이며, 특정 콤보 달성 시 <span className="text-yellow-500 dark:text-yellow-300 font-bold">스킨 선물</span>을 드립니다.
                       </p>
-                     
                     </div>
                   </div>
                 </div>
@@ -227,7 +226,7 @@ function MatchCollection() {
             matches.length > 0 && (
               <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-top-4 duration-700">
                 {/* 통계 바 - 글라스모피즘 스타일 */}
-                <div className="grid grid-cols-3 gap-[2px] bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-1">
+                <div className="grid grid-cols-3 gap-[2px] bg-white dark:bg-white/5 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-white/10 p-1 shadow-md">
                   <StatItem label="ACCURACY" value={`${Math.round((totalCorrect/(currentIndex + 1))*100)}%`} color="text-blue-400" />
                   <StatItem label="COMBO" value={streak} color="text-orange-400" highlight={streak > 0} />
                   <StatItem label="PROGRESS" value={`${currentIndex + 1}/${matches.length}`} color="text-purple-400" />
@@ -278,8 +277,8 @@ function MatchCollection() {
 
 function StatItem({ label, value, color, highlight }) {
   return (
-    <div className="bg-[#121216] rounded-xl py-3 px-4">
-      <p className="text-[10px] font-black text-slate-500 mb-1">{label}</p>
+    <div className="bg-white border border-slate-200 dark:bg-[#121216] dark:border-transparent rounded-xl py-3 px-4 shadow-sm">
+      <p className="text-[10px] font-black text-slate-600 dark:text-slate-500 mb-1">{label}</p>
       <p className={`text-xl font-black ${color} ${highlight ? 'animate-pulse' : ''}`}>{value}</p>
     </div>
   )

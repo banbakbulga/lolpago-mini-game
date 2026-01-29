@@ -94,3 +94,19 @@ button:focus-visible {
 .item-desc group {
   color: #a3a3a3; /* 회색 톤 */
 }
+
+/* AI 분석 결과 스타일 */
+.ai-analysis {
+  line-height: 1.8;
+}
+
+.ai-analysis strong {
+  font-weight: 800;
+  color: inherit;
+}
+
+/* 다크모드에서도 볼드체가 잘 보이도록 */
+.dark .ai-analysis strong {
+  color: #f1f5f9;
+  font-weight: 800;
+}

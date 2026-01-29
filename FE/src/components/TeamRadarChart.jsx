@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import { useTheme } from '../context/ThemeContext';
 
 const TeamRadarChart = ({ blueStats, redStats }) => {
   const [hoveredIndicator, setHoveredIndicator] = useState(null);
+  const { isDarkMode } = useTheme();
 
   if (!blueStats || !redStats) return null;
 
@@ -54,7 +56,7 @@ const TeamRadarChart = ({ blueStats, redStats }) => {
         <text
           x={adjustedX}
           y={adjustedY}
-          fill="#cbd5f5"
+          fill={isDarkMode ? '#cbd5f5' : '#1e293b'}
           fontSize={12}
           fontWeight={800}
           textAnchor={textAnchor}
@@ -70,11 +72,11 @@ const TeamRadarChart = ({ blueStats, redStats }) => {
   };
 
   return (
-    <div className="w-full h-[360px] bg-gradient-to-br from-[#121216] to-[#0a0a0c] border border-white/5 rounded-3xl p-6 backdrop-blur-md relative">
-      <h3 className="text-[14px] font-black text-slate-400 mb-2 uppercase tracking-widest text-center">조합 분석</h3>
+    <div className="w-full h-[360px] bg-white dark:bg-gradient-to-br dark:from-[#121216] dark:to-[#0a0a0c] border border-slate-200 dark:border-white/5 rounded-3xl p-6 backdrop-blur-md shadow-md relative">
+      <h3 className="text-[14px] font-black text-slate-900 dark:text-slate-400 mb-2 uppercase tracking-widest text-center">조합 분석</h3>
       <ResponsiveContainer width="100%" height="90%">
         <RadarChart cx="50%" cy="50%" outerRadius="85%" data={data}>
-          <PolarGrid stroke="#ffffff0a" radialLines={false} />
+          <PolarGrid stroke={isDarkMode ? '#ffffff0a' : 'rgba(148, 163, 184, 0.25)'} radialLines={false} />
           <PolarAngleAxis 
             dataKey="name" 
             tick={renderCustomTick}
@@ -85,20 +87,20 @@ const TeamRadarChart = ({ blueStats, redStats }) => {
           <Radar
             name="블루팀"
             dataKey="A"
-            stroke="#3b82f6"
-            fill="#3b82f6"
-            fillOpacity={0.35}
-            strokeWidth={2}
+            stroke={isDarkMode ? "#3b82f6" : "#2563eb"}
+            fill={isDarkMode ? "#3b82f6" : "#3b82f6"}
+            fillOpacity={isDarkMode ? 0.35 : 0.3}
+            strokeWidth={isDarkMode ? 2 : 2.5}
           />
           
           {/* 레드팀 (빨강 계열) */}
           <Radar
             name="레드팀"
             dataKey="B"
-            stroke="#ef4444"
-            fill="#ef4444"
-            fillOpacity={0.35}
-            strokeWidth={2}
+            stroke={isDarkMode ? "#ef4444" : "#dc2626"}
+            fill={isDarkMode ? "#ef4444" : "#ef4444"}
+            fillOpacity={isDarkMode ? 0.35 : 0.3}
+            strokeWidth={isDarkMode ? 2 : 2.5}
           />
         </RadarChart>
       </ResponsiveContainer>
@@ -106,9 +108,9 @@ const TeamRadarChart = ({ blueStats, redStats }) => {
       {/* 툴팁 (레이더 차트 외부에 표시) */}
       {hoveredIndicator && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
-          <div className="bg-black/95 backdrop-blur-md border border-white/10 rounded-lg p-3 shadow-2xl max-w-[200px]">
-            <p className="text-white text-xs font-bold mb-1">{hoveredIndicator}</p>
-            <p className="text-slate-400 text-[10px] leading-relaxed">
+          <div className="bg-white/95 dark:bg-black/95 backdrop-blur-md border border-slate-200 dark:border-white/10 rounded-lg p-3 shadow-2xl max-w-[200px]">
+            <p className="text-slate-900 dark:text-white text-xs font-bold mb-1">{hoveredIndicator}</p>
+            <p className="text-slate-600 dark:text-slate-400 text-[10px] leading-relaxed">
               {indicatorDescriptions[hoveredIndicator] || '설명 없음'}
             </p>
           </div>

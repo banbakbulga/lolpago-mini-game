@@ -34,7 +34,7 @@
     "Ezreal": { "early": 65, "late": 85, "tank": 35, "damage": 90, "cc": 5, "init": 15 },
     "Fiddlesticks": { "early": 55, "late": 88, "tank": 45, "damage": 92, "cc": 90, "init": 98 },
     "Fiora": { "early": 70, "late": 97, "tank": 60, "damage": 98, "cc": 45, "init": 40 },
-    "Fizㄷㄷz": { "early": 65, "late": 85, "tank": 40, "damage": 95, "cc": 60, "init": 75 },
+    "Fizz": { "early": 65, "late": 85, "tank": 40, "damage": 95, "cc": 60, "init": 75 },
     "Galio": { "early": 60, "late": 78, "tank": 88, "damage": 65, "cc": 92, "init": 95 },
     "Gangplank": { "early": 55, "late": 98, "tank": 45, "damage": 99, "cc": 40, "init": 60 },
     "Garen": { "early": 75, "late": 75, "tank": 85, "damage": 82, "cc": 25, "init": 55 },

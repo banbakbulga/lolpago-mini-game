@@ -1,4 +1,4 @@
-// 백엔드 서버 URL (개발 환경에서는 localhost:8000, 프로덕션에서는 환경 변수 사용)
+// 백엔드 서버 URL (개발 환경: localhost:8000, 프로덕션: 환경 변수 사용)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const REGION = 'kr';
 const REGION_ASIA = 'asia';
