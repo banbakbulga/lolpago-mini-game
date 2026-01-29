@@ -1,6 +1,5 @@
 // 백엔드 서버 URL (개발 환경: localhost:8000, 프로덕션: 환경 변수 사용)
-// 배포 시에는 주소 앞에 아무것도 안 붙여도(/api/...) Vercel이 알아서 같은 도메인의 api 폴더를 찾아가!
-const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const REGION = 'kr';
 const REGION_ASIA = 'asia';
 
@@ -36,11 +35,7 @@ export async function getLeagueEntries(tier, division = null, page = 1) {
   const url = `${API_BASE_URL}/api/league-entries/${tier}${divisionParam}?page=${page}`;
 
   const response = await fetch(url);
-  if (!response.ok) {
-    const text = await response.text();
-    console.error(`API Error (${response.status}) at ${url}:`, text.slice(0, 500)); // 첫 500자만 로그
-    throw new Error(`${tier} ${division || ''} 호출 실패: ${response.status} - ${text.slice(0, 100)}`);
-  }
+  if (!response.ok) throw new Error(`${tier} ${division || ''} 호출 실패: ${response.status}`);
   const data = await response.json();
   return data || [];
 }
@@ -282,12 +277,9 @@ export async function collectMasterMatchData(matchCount = 10, matchesPerUser = 1
   try {
     const allMatchData = [];
     const targetCount = matchCount; // 목표 매치 수
-    let attempts = 0;
-    const MAX_ATTEMPTS = 50; // 무한 루프 방지용 최대 시도 횟수
 
     // 다양한 티어에서 랜덤하게 유저 선택하여 매치 수집
-    while (allMatchData.length < targetCount && attempts < MAX_ATTEMPTS) {
-      attempts++;
+    while (allMatchData.length < targetCount) {
       // 랜덤 티어 선택
       const { tier, division } = getRandomTier();
 
