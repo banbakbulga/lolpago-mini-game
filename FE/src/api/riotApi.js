@@ -1,8 +1,6 @@
 // 백엔드 서버 URL (개발 환경: localhost:8000, 프로덕션: 환경 변수 사용)
-// 백엔드 서버 URL
-// 개발 환경(local): localhost:8000
-// 배포 환경(production): vercel.json Rewrite를 통해 '/api'로 요청하면 백엔드(http://118.223.39.153:8000)로 프록시됨
-const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:8000' : '';
+// 배포 시에는 주소 앞에 아무것도 안 붙여도(/api/...) Vercel이 알아서 같은 도메인의 api 폴더를 찾아가!
+const API_BASE_URL = import.meta.env.PROD ? '' : 'http://localhost:8000';
 const REGION = 'kr';
 const REGION_ASIA = 'asia';
 
