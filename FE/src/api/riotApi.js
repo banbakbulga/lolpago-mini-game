@@ -1,5 +1,5 @@
 // 백엔드 서버 URL (개발 환경: localhost:8000, 프로덕션: 환경 변수 사용)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const REGION = 'kr';
 const REGION_ASIA = 'asia';
 
@@ -17,9 +17,9 @@ function getRandomTier() {
     ...TIERS_WITH_DIVISIONS.map(tier => ({ tier, hasDivision: true })),
     ...TIERS_WITHOUT_DIVISIONS.map(tier => ({ tier, hasDivision: false }))
   ];
-  
+
   const randomTier = allTiers[Math.floor(Math.random() * allTiers.length)];
-  
+
   if (randomTier.hasDivision) {
     const division = DIVISIONS[Math.floor(Math.random() * DIVISIONS.length)];
     return { tier: randomTier.tier, division };
@@ -33,7 +33,7 @@ export async function getLeagueEntries(tier, division = null, page = 1) {
   /**await delay(100);**/
   const divisionParam = division ? `/${division}` : '';
   const url = `${API_BASE_URL}/api/league-entries/${tier}${divisionParam}?page=${page}`;
-  
+
   const response = await fetch(url);
   if (!response.ok) throw new Error(`${tier} ${division || ''} 호출 실패: ${response.status}`);
   const data = await response.json();
@@ -104,16 +104,16 @@ export function parseGoldData(timelineData, matchProp, champData) {
 
   return timelineData.info.frames.map((frame, index) => {
     // 블루/레드 팀 골드 합계
-    const blueGold = frame.participantFrames 
+    const blueGold = frame.participantFrames
       ? Object.values(frame.participantFrames)
-          .filter(p => p.participantId <= 5)
-          .reduce((sum, p) => sum + (p.totalGold || 0), 0)
+        .filter(p => p.participantId <= 5)
+        .reduce((sum, p) => sum + (p.totalGold || 0), 0)
       : 0;
-      
-    const redGold = frame.participantFrames 
+
+    const redGold = frame.participantFrames
       ? Object.values(frame.participantFrames)
-          .filter(p => p.participantId > 5)
-          .reduce((sum, p) => sum + (p.totalGold || 0), 0)
+        .filter(p => p.participantId > 5)
+        .reduce((sum, p) => sum + (p.totalGold || 0), 0)
       : 0;
 
     const matchEvents = [];
@@ -176,7 +176,7 @@ export function parseGoldData(timelineData, matchProp, champData) {
           if (e.laneType === 'MID_LANE') lane = '미드';
           else if (e.laneType === 'TOP_LANE') lane = '탑';
           else if (e.laneType === 'BOT_LANE') lane = '바텀';
-          
+
           if (lane) {
             matchEvents.push({ type: 'obj', team, text: `${lane} 억제기 파괴` });
           }
@@ -240,7 +240,7 @@ function parseMatchData(matchData) {
   const extractTeamObjectives = (teamId) => {
     const team = teams.find(t => t.teamId === teamId);
     if (!team?.objectives) return null;
-    
+
     return {
       dragon: team.objectives.dragon?.kills || 0,
       baron: team.objectives.baron?.kills || 0,
@@ -277,15 +277,15 @@ export async function collectMasterMatchData(matchCount = 10, matchesPerUser = 1
   try {
     const allMatchData = [];
     const targetCount = matchCount; // 목표 매치 수
-    
+
     // 다양한 티어에서 랜덤하게 유저 선택하여 매치 수집
     while (allMatchData.length < targetCount) {
       // 랜덤 티어 선택
       const { tier, division } = getRandomTier();
-      
+
       try {
         const entries = await getLeagueEntries(tier, division);
-        
+
         // 엔트리가 없으면 다음 티어로
         if (!entries || entries.length === 0) {
           console.warn(`${tier} ${division || ''} 엔트리가 없습니다.`);
@@ -298,13 +298,13 @@ export async function collectMasterMatchData(matchCount = 10, matchesPerUser = 1
 
         // puuid 확인 (엔트리에서 puuid가 없으면 summonerId로 조회 필요)
         let puuid = selectedUser.puuid;
-        
+
         if (!puuid && selectedUser.summonerId) {
           // puuid가 없으면 summonerId로 조회
           const summonerInfo = await getSummonerBySummonerId(selectedUser.summonerId);
           puuid = summonerInfo.puuid;
         }
-        
+
         if (!puuid) {
           console.warn(`유저의 puuid를 찾을 수 없습니다.`, selectedUser);
           continue;
@@ -317,10 +317,10 @@ export async function collectMasterMatchData(matchCount = 10, matchesPerUser = 1
           if (allMatchData.length >= targetCount) {
             break;
           }
-          
+
           const matchData = await getMatchByMatchId(matchId);
           const parsed = parseMatchData(matchData);
-          
+
           // 매치 duration 필터링 (너무 짧은 게임 제외)
           // 최소 10분(600초) 이상인 게임만 수집 (조기 항복, 다시하기, 버그 게임 등 제외)
           if (parsed && parsed.gameDurationSeconds >= 600) {
@@ -337,7 +337,7 @@ export async function collectMasterMatchData(matchCount = 10, matchesPerUser = 1
         continue;
       }
     }
-    
+
     return allMatchData.slice(0, targetCount); // 정확히 목표 개수만 반환
   } catch (error) {
     console.error("수집 실패:", error);
