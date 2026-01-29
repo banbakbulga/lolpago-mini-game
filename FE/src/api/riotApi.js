@@ -1,6 +1,8 @@
 // 백엔드 서버 URL (개발 환경: localhost:8000, 프로덕션: 환경 변수 사용)
-// 백엔드 서버 URL (개발 환경: localhost:8000, 프로덕션: 환경 변수 사용 또는 고정 IP)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://118.223.39.153:8000';
+// 백엔드 서버 URL
+// 개발 환경(local): localhost:8000
+// 배포 환경(production): vercel.json Rewrite를 통해 '/api'로 요청하면 백엔드(http://118.223.39.153:8000)로 프록시됨
+const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:8000' : '';
 const REGION = 'kr';
 const REGION_ASIA = 'asia';
 
@@ -278,9 +280,12 @@ export async function collectMasterMatchData(matchCount = 10, matchesPerUser = 1
   try {
     const allMatchData = [];
     const targetCount = matchCount; // 목표 매치 수
+    let attempts = 0;
+    const MAX_ATTEMPTS = 50; // 무한 루프 방지용 최대 시도 횟수
 
     // 다양한 티어에서 랜덤하게 유저 선택하여 매치 수집
-    while (allMatchData.length < targetCount) {
+    while (allMatchData.length < targetCount && attempts < MAX_ATTEMPTS) {
+      attempts++;
       // 랜덤 티어 선택
       const { tier, division } = getRandomTier();
 
