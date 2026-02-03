@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { collectMasterMatchData } from '../api/riotApi'
 import MatchCard from '../components/MatchCard'
 import MatchSkeleton from '../components/MatchSkeleton'
@@ -26,7 +27,7 @@ function MatchCollection() {
         setLoading(false);
         return;
       }
-      
+
       // 첫 번째 매치를 상태에 설정
       setMatches(firstMatchData);
       setCurrentIndex(0);
@@ -34,7 +35,7 @@ function MatchCollection() {
       setStreak(0);
       setMaxStreak(0);
       setLoading(false); // 첫 매치 로드 완료 후 화면에 표시
-      
+
       // 백그라운드에서 나머지 9개 매치 로드 시작
       loadRemainingMatches(firstMatchData);
     } catch (err) {
@@ -91,7 +92,7 @@ function MatchCollection() {
 
   const handleNext = () => {
     const nextIndex = currentIndex + 1;
-    
+
     // 다음 매치가 있는 경우
     if (nextIndex < matches.length) {
       setCurrentIndex(nextIndex);
@@ -108,28 +109,47 @@ function MatchCollection() {
   const currentMatch = matches[currentIndex];
 
   return (
-    <div className="w-full min-h-screen bg-slate-100 text-slate-900 dark:bg-[#0a0a0c] dark:text-slate-200 font-sans selection:bg-indigo-500/30 overflow-x-hidden">
-      {/* 배경 그리드 패턴 */}
-      <div className="fixed inset-0 opacity-10 pointer-events-none" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-      }}></div>
-      
+    <div className="w-full min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-200 font-sans selection:bg-indigo-500/30 overflow-x-hidden relative transition-colors duration-500">
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        {/* 그리드 패턴 (모눈종이 효과) */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:14px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+
+        {/* 보라색 오로라 애니메이션 */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 right-0 w-[800px] h-[800px] bg-purple-300/30 dark:bg-purple-600/20 rounded-full blur-[120px]"
+        />
+
+        {/* 파란색 오로라 애니메이션 */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 4 }}
+          className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-300/30 dark:bg-blue-600/10 rounded-full blur-[100px]"
+        />
+      </div>
+
       <div className="max-w-4xl mx-auto px-4 relative z-10">
         <header className="py-6 text-center">
-          <h1 className={`font-[1000] tracking-tighter mb-2 italic transition-all duration-700 ${
-            matches.length > 0 || loading
-              ? 'text-2xl md:text-3xl' 
-              : 'text-5xl md:text-6xl'
-          }`}>
+          <h1 className={`font-[1000] tracking-tighter mb-2 italic transition-all duration-700 ${matches.length > 0 || loading
+            ? 'text-2xl md:text-3xl'
+            : 'text-5xl md:text-6xl'
+            }`}>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-indigo-400 to-red-500">
               WHO WINS?
             </span>
           </h1>
-          <p className={`text-slate-500 text-sm font-medium tracking-widest uppercase transition-all duration-700 ${
-            matches.length > 0 || loading
-              ? 'opacity-0 h-0 mb-0 overflow-hidden' 
-              : 'opacity-100'
-          }`}>
+          <p className={`text-slate-500 text-sm font-medium tracking-widest uppercase transition-all duration-700 ${matches.length > 0 || loading
+            ? 'opacity-0 h-0 mb-0 overflow-hidden'
+            : 'opacity-100'
+            }`}>
             Match Result Predictor
           </p>
 
@@ -147,7 +167,7 @@ function MatchCollection() {
                     <p className="leading-7 px-2">
                       실제 라이엇 API 데이터를 기반으로 한 고도의 심리 분석 퀴즈입니다.
                     </p>
-                    
+
                     <p className="leading-7 px-2">
                       각 경기에서 제공되는 <span className="text-yellow-400 font-bold">힌트</span>를 분석하여 승리팀을 맞춰보세요!
                     </p>
@@ -159,15 +179,15 @@ function MatchCollection() {
                       </p>
                       <ul className="space-y-3 text-xs md:text-sm text-slate-600 dark:text-slate-400 flex flex-col items-center">
                         <li className="flex items-center gap-3 leading-6">
-                          
+
                           <span>10개의 경기를 순차적으로 풀어보세요</span>
                         </li>
                         <li className="flex items-center gap-3 leading-6">
-                          
+
                           <span>연속으로 정답을 맞추면 콤보가 쌓입니다</span>
                         </li>
                         <li className="flex items-center gap-3 leading-6">
-                          
+
                           <span>정답/오답 박스를 클릭하면 다음 문제로 넘어갑니다</span>
                         </li>
                       </ul>
@@ -179,7 +199,7 @@ function MatchCollection() {
                 <div className="relative bg-white dark:bg-[#111827] border border-slate-200 dark:border-yellow-500/40 rounded-2xl p-6 md:p-8 shadow-md overflow-hidden mx-auto text-center">
                   {/* 상단 하이라이트 바 */}
                   <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 opacity-90" />
-                  
+
                   <div className="relative z-10">
                     <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-yellow-300 mb-4 flex items-center justify-center gap-2">
                       <span className="text-2xl">🎁</span>
@@ -194,15 +214,15 @@ function MatchCollection() {
                   </div>
                 </div>
               </div>
-              
+
               {/* 에러 메시지 */}
               {error && (
                 <div className="max-w-2xl mx-auto mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
                   <p className="text-red-400 text-sm font-semibold">{error}</p>
                 </div>
               )}
-              
-              <button 
+
+              <button
                 onClick={startCollect}
                 disabled={loading}
                 className="group relative inline-flex items-center justify-center px-12 py-5 font-black text-white text-lg transition-all duration-300 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 hover:from-indigo-500 hover:via-purple-500 hover:to-indigo-500 shadow-[0_0_40px_rgba(79,70,229,0.5)] hover:shadow-[0_0_60px_rgba(79,70,229,0.7)] disabled:opacity-50 transform hover:scale-105 active:scale-95"
@@ -227,7 +247,7 @@ function MatchCollection() {
               <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-top-4 duration-700">
                 {/* 통계 바 - 글라스모피즘 스타일 */}
                 <div className="grid grid-cols-3 gap-[2px] bg-white dark:bg-white/5 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-white/10 p-1 shadow-md">
-                  <StatItem label="ACCURACY" value={`${Math.round((totalCorrect/(currentIndex + 1))*100)}%`} color="text-blue-400" />
+                  <StatItem label="ACCURACY" value={`${Math.round((totalCorrect / (currentIndex + 1)) * 100)}%`} color="text-blue-400" />
                   <StatItem label="COMBO" value={streak} color="text-orange-400" highlight={streak > 0} />
                   <StatItem label="PROGRESS" value={`${currentIndex + 1}/${matches.length}`} color="text-purple-400" />
                 </div>
@@ -259,9 +279,9 @@ function MatchCollection() {
                   </div>
                 </div>
               )}
-              
-              <MatchCard 
-                match={currentMatch} 
+
+              <MatchCard
+                match={currentMatch}
                 index={currentIndex}
                 onAnswer={handleAnswer}
                 onNext={handleNext}
